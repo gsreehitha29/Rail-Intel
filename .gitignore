@@ -1,0 +1,105 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.conda/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.suo
+*.user
+*.workspace
+*.project
+.settings/
+*.code-workspace
+
+# OS junk
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Secrets and credentials
+.env
+*.env
+.secrets
+secrets.py
+config_local.py
+*.pem
+*.key
+
+# Temporary and scratch files
+*.tmp
+*.temp
+tmp/
+temp/
+scratch/
+*.bak
+*.swp
+*.swo
+
+# ----------------------------------------------------------------
+# Large raw and processed files — use Git LFS or external storage
+# ----------------------------------------------------------------
+# These are listed as documentation of the LFS strategy.
+# If Git LFS is configured, REMOVE these lines and add them to
+# .gitattributes with:  *.geojson filter=lfs diff=lfs merge=lfs -text
+#
+# Railway_Network_.geojson          (~88 MB)
+# railways-master/schedules.json    (~78 MB)
+# processed_data/cleaned_schedules.csv (~62 MB)
+# railways-master/trains.json       (~14 MB)
+# processed_data/cleaned_trains.csv (~13 MB)
+# Railway_Network_.csv              (~13 MB)
+#
+# NOTE: These files are NOT ignored by default so they remain
+# accessible in the working directory.
+# Add them to .gitattributes for LFS when LFS is enabled.
+# ----------------------------------------------------------------
+
+# Logs
+*.log
+logs/
+
+# Profiling
+*.prof
+
