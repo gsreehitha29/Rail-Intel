@@ -1,0 +1,56 @@
+GRAPH DATASET QA  (v1.0)
+======================================================================
+
+-- NORMALISATION APPLIED --
+zone vocabulary unified to (zone_code, zone_name)  : 17 codes on nodes, 17 on corridors
+zone spellings corrected upstream in s02           : 4 (East Coast Railwa, Southen Railway, Westem Railway, and North Frontier Railway -> Northeast Frontier Railway)
+gauge vocabulary unified to (gauge_code, gauge_name): 4 codes
+station '?' zone sentinels mapped to null          : 106
+'Orissa' renamed to 'Odisha'                       : 65
+stations flagged out of scope (Bangladesh)         : 2
+stations with a shared coordinate (mislocated)     : 11
+stations without coordinates                       : 293
+
+-- NODES --
+total nodes                        : 9,095
+   station                         : 8,621
+   operational_junction            : 474
+   of which dissolvable (deg 2)    : 115
+nodes with coordinates             : 9,094
+   of which degree 1 (line ends)   : 313
+   of which degree >=3 (load-bearing): 46
+nodes with a zone                  : 8,997 (4,123 stated, 4,874 inferred from corridor)
+nodes with a state                 : 4,163
+
+-- EDGES --
+total edges                        : 9,689
+   attr_complete                   : 8,638
+   core_v2 / core_v4               : 8,411 / 8,047
+   parallel corridors > 1          : 581 (124 genuinely different routes)
+   co-located (floored to 0.05 km)  : 249
+   carrying >=1 direct service     : 7,754 (80.0%)
+   carrying projected service load : 8,707 (89.9%)
+total route km                     : 72,201
+
+-- STRUCTURE --
+components                         : 18
+giant component                    : 9,058 nodes (99.6%)
+independent cycles in giant        : 612
+bridges in giant                   : 1,412 (14.6%)
+articulation points in giant       : 1,338
+degree mean/max                    : 2.13 / 7
+
+-- SERVICE LAYER --
+service adjacencies                : 10,193
+   both endpoints in graph         : 9,586 (94.0%)
+   already a direct physical edge  : 7,754 (80.9%)
+   resolved within 3 physical hops : 97.4%
+   unresolved (no path <= 300 km)  : 2
+run-times derived                  : 8,497 pairs, median 8 min
+
+-- REFERENTIAL INTEGRITY OF THIS PACKAGE --
+edge endpoints missing from nodes.csv : 0
+duplicate node_id                     : 0
+duplicate edge (from,to)              : 0
+self-loops                            : 0
+edges with null length                : 0

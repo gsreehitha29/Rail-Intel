@@ -1,5 +1,22 @@
 # Data Dictionary — Rail-Intell
 
+> ## ⚠ Describes the Phase 1 datasets and the superseded v1 graph files
+>
+> The `rail_edges_initial.csv` / `junction_nodes_initial.csv` /
+> `railway_components_initial.csv` tables documented here now live in
+> `01_data_engineering/legacy_graph_v1/` and are **superseded** by
+> `02_graph_inputs/graph_dataset/`. Two figures below are known to be wrong:
+>
+> * **"116,218 filtered GIS records"** cannot be reproduced from the raw file
+>   by any filter. The reproducible count is 118,442 valid segment rows.
+> * **`geometry_length_km` is ~9% too long** — it derives from the source
+>   `st_lengthshape` field, which was computed in a projected CRS. Use
+>   `length_km` in the dataset's `edges.csv`, which is true geodesic distance.
+>
+> The `01_data_engineering/processed_data/` sections below remain accurate;
+> those three files were independently re-verified and are still the pipeline's
+> inputs.
+
 This document describes every column in the graph-relevant datasets.  
 Only columns that actually exist in the files are documented here.  
 Schemas were verified directly from the files on 2026-09-27.
@@ -88,11 +105,11 @@ Schemas were verified directly from the files on 2026-09-27.
 
 ## Processed Data
 
-### `processed_data/cleaned_stations.csv`
+### `01_data_engineering/processed_data/cleaned_stations.csv`
 
-**Location:** `processed_data/`  
+**Location:** `01_data_engineering/processed_data/`  
 **Shape:** 8,990 rows × 12 columns  
-**Source:** `railways-master/stations.json` (GeoJSON FeatureCollection)  
+**Source:** `01_data_engineering/railways-master/stations.json` (GeoJSON FeatureCollection)  
 **Produced by:** `01_Final_Data_Preprocessing_and_Validation.ipynb`  
 **Description:** Station master dataset. One row per Indian railway station. All station codes verified unique.
 
@@ -116,11 +133,11 @@ Schemas were verified directly from the files on 2026-09-27.
 
 ---
 
-### `processed_data/cleaned_schedules.csv`
+### `01_data_engineering/processed_data/cleaned_schedules.csv`
 
-**Location:** `processed_data/`  
+**Location:** `01_data_engineering/processed_data/`  
 **Shape:** 416,970 rows × 22 columns  
-**Source:** `railways-master/schedules.json` (417,080 raw records; 110 consecutive-duplicate stops removed)  
+**Source:** `01_data_engineering/railways-master/schedules.json` (417,080 raw records; 110 consecutive-duplicate stops removed)  
 **Produced by:** `01_Final_Data_Preprocessing_and_Validation.ipynb`  
 **Composite key:** `(train_number, station_code, stop_sequence)` — verified 0 duplicates
 
@@ -154,11 +171,11 @@ Schemas were verified directly from the files on 2026-09-27.
 
 ---
 
-### `processed_data/cleaned_trains.csv`
+### `01_data_engineering/processed_data/cleaned_trains.csv`
 
-**Location:** `processed_data/`  
+**Location:** `01_data_engineering/processed_data/`  
 **Shape:** 5,208 rows × 34 columns  
-**Source:** `railways-master/trains.json` (GeoJSON FeatureCollection)  
+**Source:** `01_data_engineering/railways-master/trains.json` (GeoJSON FeatureCollection)  
 **Produced by:** `01_Final_Data_Preprocessing_and_Validation.ipynb`
 
 | Column | Type | Missing | Meaning |
@@ -210,9 +227,9 @@ The following raw files are the upstream sources. Do not modify them.
 |------|--------|---------|-------------|
 | `Railway_Network_.csv` | CSV | 119,446 | Raw GIS railway segment table. Primary source for graph edges. |
 | `Railway_Network_.geojson` | GeoJSON | 119,446 | Geometry for all GIS segments. Used for spatial endpoint extraction. |
-| `railways-master/stations.json` | GeoJSON | 8,990 | Source for station master. |
-| `railways-master/trains.json` | GeoJSON | 5,208 | Source for train metadata. |
-| `railways-master/schedules.json` | JSON | 417,080 | Source for schedule stop records. |
+| `01_data_engineering/railways-master/stations.json` | GeoJSON | 8,990 | Source for station master. |
+| `01_data_engineering/railways-master/trains.json` | GeoJSON | 5,208 | Source for train metadata. |
+| `01_data_engineering/railways-master/schedules.json` | JSON | 417,080 | Source for schedule stop records. |
 
 ---
 

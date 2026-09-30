@@ -1,0 +1,63 @@
+GRAPH-INPUT QA SUMMARY  (v1.0)
+======================================================================
+
+-- KEY INTEGRITY --
+junction_id unique                     : True
+canonical_junction_name unique         : True
+corridor_id unique                     : True
+corridor (a,b) pair unique             : True
+(corridor_id, sequence_index) unique   : True
+
+-- REFERENTIAL INTEGRITY --
+corridor endpoints missing from nodes  : 0
+sequence rows with unknown corridor_id : 0
+junctions on zero corridors            : 0
+
+-- COVERAGE --
+canonical junctions                    : 2,029
+  with a coordinate                    : 2,028 (100.0%)
+  with high/medium station match       : 1,555
+corridors                              : 2,279
+  with reconstructed spine             : 2,279
+  clean_path                           : 2,166
+  with >=2 stations placed             : 1,794
+station placements                     : 12,305
+  distinct stations placed             : 8,623
+
+-- GEOMETRY / WEIGHT SANITY --
+total geodesic corridor length         : 71,759 km
+total declared (st_lengthshape) length : 78,126 km
+median inflation ratio declared/geodesic: 1.0902
+   (Year Book 2024-25 reports 69,439 route km; the geodesic total is the
+    closer of the two, so geodesic lengths should be used as edge weights)
+corridors with non-positive length     : 0
+station perpendicular offset median    : 41 m
+station offsets > 1.5 km (weak placement): 643
+
+-- MONOTONIC ORDERING CHECK --
+corridors whose measure_km is not monotonic: 0
+
+-- SPINE SHORTCUT CHECK --
+   Along-line distance between consecutive stations should never be shorter
+   than their crow-flies distance once each station's lateral offset is
+   accounted for. Where it is, the spine has cut a corner the real track does
+   not (a chord or parallel line inside the corridor became the shortest path).
+consecutive station pairs              : 10,167
+  affected at all                      : 1,741 (17.1%)
+  shortfall > 10% of pair distance      : 542
+  shortfall > 25% of pair distance      : 54
+  median shortfall among affected       : 5.00%
+
+-- CONNECTIVITY OF THE CANONICAL JUNCTION NETWORK --
+nodes                                  : 2,029
+edges                                  : 2,274
+connected components                   : 107   (was 113 before canonicalisation)
+largest component                      : 1,789 nodes (88.2%)
+isolated 2-node components             : 89
+
+-- WHAT REMAINS OPEN FOR GRAPH ENGINEERING --
+junctions with ambiguous coordinate    : 88
+name matches rejected on spatial conflict: 40
+stations sitting on >2 corridors        : 1,001
+corridors still fragmented (>1 component): 72
+corridors with 0 stations placed        : 140

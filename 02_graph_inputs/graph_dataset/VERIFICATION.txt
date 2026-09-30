@@ -1,0 +1,44 @@
+DATASET VERIFICATION
+======================================================================
+
+-- keys --
+  PASS  nodes.node_id unique
+  PASS  edges.edge_id unique
+  PASS  stations.station_code unique
+  PASS  corridors.corridor_id unique
+  PASS  edges have no duplicate undirected pair
+  PASS  edges have no self-loops
+
+-- referential integrity --
+  PASS  every edge endpoint exists in nodes.csv
+  PASS  every edge.corridor_id exists in corridors.csv
+  PASS  every station node exists in stations.csv
+  PASS  every sequenced station exists in stations.csv
+  PASS  every service endpoint exists in stations.csv
+  PASS  station node_id == station_code
+
+-- controlled vocabularies --
+  PASS  exactly 17 zone codes across all files (found 17)
+  PASS  exactly 17 zone names across all files (found 17)
+  PASS  gauge codes canonical
+  PASS  no 'Orissa' spelling remaining
+  PASS  node_type vocabulary closed
+  PASS  zone_source vocabulary closed
+  PASS  no normalisation collisions in any categorical column (0 found)
+
+-- values --
+  PASS  all edge lengths > 0
+  PASS  no null edge lengths
+  PASS  all node coordinates inside India bounds
+  PASS  run-times within 24h
+  PASS  service frequencies positive
+
+-- structure --
+  PASS  node count matches nodes.csv (9,095)
+  PASS  edge count matches edges.csv (9,689)
+  PASS  in_giant_component flag matches recomputation (9,058 nodes, 99.6%)
+  PASS  degree column matches recomputation
+  PASS  service_load covers >= service_direct (8,707 vs 7,754)
+
+======================================================================
+RESULT: ALL CHECKS PASSED

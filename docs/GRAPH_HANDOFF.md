@@ -1,5 +1,23 @@
 # Railway Graph Handoff
 
+> ## ⚠ SUPERSEDED — see `docs/GRAPH_HANDOFF_V2.md`, and build from
+> ## `02_graph_inputs/graph_dataset/`
+>
+> This document describes the state of the data **before** the graph-input
+> pipeline was built. Its blockers (junction/station identity, missing
+> coordinates, whitespace-duplicate junctions, corridor-geometry feasibility)
+> have since been resolved in `02_graph_inputs/graph_inputs/`, produced by
+> `02_graph_inputs/pipeline/run_all.py`.
+>
+> Two specific claims below are now known to be wrong and are corrected in v2:
+> * §1 and §7 state the haversine validation "was NOT executed". It **was** —
+>   cells 211–218 of the preprocessing notebook carry stored outputs.
+> * §12.3 reports "747" junctions matched to the station master. The
+>   reproducible figure is **727**; 747 does not correspond to any code path.
+>
+> Kept unchanged for provenance and for the reasoning in §10 and §12, which
+> remains sound.
+
 > **Prepared for:** Graph-Design Teammate  
 > **Phase:** EDA + Data-Preprocessing → Graph Construction  
 > **Status:** Initial junction-level railway representation is complete.  
@@ -12,7 +30,7 @@
 The data-engineering phase has completed the following:
 
 - **Railway network EDA:** 119,446 raw GIS segments from `Railway_Network_.csv` have been cleaned, zone-standardised, and aggregated into a junction-level graph representation stored as CSV files.
-- **Station master:** 8,990 Indian railway stations (from `railways-master/stations.json`) have been cleaned, coordinate-validated, and quality-flagged.
+- **Station master:** 8,990 Indian railway stations (from `01_data_engineering/railways-master/stations.json`) have been cleaned, coordinate-validated, and quality-flagged.
 - **Train metadata:** 5,208 trains have been parsed and cleaned.
 - **Schedule data:** 416,970 stop records have been validated against the station master and quality-flagged.
 - **Spatial analysis (partial):** GeoJSON endpoint extraction and name-based junction–station matching have been performed. A haversine coordinate-distance validation was implemented but **not executed** in the current notebook version (see [Section 7](#7-station-network-spatial-validation)).
@@ -114,9 +132,9 @@ The remaining 112 components include 89 isolated junction pairs (2 nodes each).
 
 ## 3. Station Master
 
-**File:** `processed_data/cleaned_stations.csv`  
+**File:** `01_data_engineering/processed_data/cleaned_stations.csv`  
 **Produced by:** `01_Final_Data_Preprocessing_and_Validation.ipynb`  
-**Source:** `railways-master/stations.json`
+**Source:** `01_data_engineering/railways-master/stations.json`
 
 | Property | Value |
 |----------|-------|
@@ -231,7 +249,7 @@ A spatial methodology was implemented in `01_Final_Data_Preprocessing_and_Valida
 
 ## 8. Schedules and Trains
 
-### `processed_data/cleaned_schedules.csv`
+### `01_data_engineering/processed_data/cleaned_schedules.csv`
 
 | Property | Value |
 |----------|-------|
@@ -247,7 +265,7 @@ A spatial methodology was implemented in `01_Final_Data_Preprocessing_and_Valida
 
 Schedules *could* be used to derive station-to-station service connectivity (consecutive stops within a train define a service link). This has not been implemented.
 
-### `processed_data/cleaned_trains.csv`
+### `01_data_engineering/processed_data/cleaned_trains.csv`
 
 | Property | Value |
 |----------|-------|
@@ -269,7 +287,7 @@ Open these files in this order:
 | 1 | `rail_edges_initial.csv` | Physical edge list — your primary graph source |
 | 2 | `junction_nodes_initial.csv` | Node table with degree and component membership |
 | 3 | `railway_components_initial.csv` | Connectivity overview — decide which components to include |
-| 4 | `processed_data/cleaned_stations.csv` | Station master — use when building a station-level node set |
+| 4 | `01_data_engineering/processed_data/cleaned_stations.csv` | Station master — use when building a station-level node set |
 
 Also read:
 - `Railway_networks_EDA.ipynb` — understand how the edge/node files were produced
