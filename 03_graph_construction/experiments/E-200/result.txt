@@ -1,0 +1,76 @@
+==============================================================================
+E-200  construction-choice sensitivity sweep
+==============================================================================
+
+[ref] measuring the default cell
+      done in 94.0s
+
+[sweep] 19 further cells
+   1/19 tolerance=1.0              n= 9,587 giant= 99.5% br= 15.0% path=  1306.6 corrOv=0.90 R_rand=0.0441 [88.9s]
+   2/19 tolerance=2.0              n= 9,810 giant= 99.7% br= 14.2% path=  1274.1 corrOv=0.88 R_rand=0.0535 [91.9s]
+   3/19 no_stitching               n= 8,816 giant= 59.4% br= 41.3% path=  1571.9 corrOv=0.18 R_rand=0.0365 [44.2s]
+   4/19 node_model=station_only    n= 9,100 giant= 99.3% br= 18.4% path=  1320.7 corrOv=0.72 R_rand=0.0306 [82.2s]
+   5/19 node_model=junction_only   n= 2,274 giant= 88.2% br= 29.5% path=  1431.4 corrOv=0.22 R_rand=0.1361 [13.8s]
+   6/19 match_conf=high_only       n=10,038 giant= 99.3% br= 16.4% path=  1307.7 corrOv=0.86 R_rand=0.0467 [99.2s]
+   7/19 parallel=mean              n= 9,689 giant= 99.6% br= 14.6% path=  1280.6 corrOv=0.94 R_rand=0.0486 [92.1s]
+   8/19 dissolve_degree2           n= 9,552 giant= 99.6% br= 14.5% path=  1265.7 corrOv=0.98 R_rand=0.0433 [94.7s]
+   9/19 prune_degree1              n= 9,389 giant=100.0% br= 12.1% path=  1273.5 corrOv=0.98 R_rand=0.0466 [91.2s]
+  10/19 merge_colocated            n= 9,322 giant= 99.6% br= 15.0% path=  1275.8 corrOv=0.94 R_rand=0.0541 [90.6s]
+  11/19 gauge_constrained          n= 9,451 giant= 99.2% br= 13.8% path=  1298.3 corrOv=0.82 R_rand=0.0500 [87.4s]
+  12/19 view=core_v2               n= 8,411 giant= 96.9% br= 28.4% path=  1680.5 corrOv=0.34 R_rand=0.0397 [73.1s]
+  13/19 view=core_v4               n= 8,047 giant= 93.7% br= 32.4% path=  1871.3 corrOv=0.34 R_rand=0.0275 [65.9s]
+  14/19 tol1.0_stitchON            n= 9,587 giant= 99.5% br= 15.0% path=  1306.6 corrOv=0.90 R_rand=0.0441 [84.2s]
+  15/19 tol1.0_stitchOFF           n= 8,566 giant= 17.6% br= 48.8% path=   604.5 corrOv=0.08 R_rand=0.0519 [10.2s]
+  16/19 tol1.5_stitchON            n= 9,689 giant= 99.6% br= 14.6% path=  1275.5 corrOv=1.00 R_rand=0.0486 [86.8s]
+  17/19 tol1.5_stitchOFF           n= 8,816 giant= 59.4% br= 41.3% path=  1571.9 corrOv=0.18 R_rand=0.0365 [41.6s]
+  18/19 tol2.0_stitchON            n= 9,810 giant= 99.7% br= 14.2% path=  1274.1 corrOv=0.88 R_rand=0.0535 [89.8s]
+  19/19 tol2.0_stitchOFF           n= 8,989 giant= 92.2% br= 29.3% path=  1502.8 corrOv=0.48 R_rand=0.0299 [73.5s]
+
+[verdicts] per-conclusion robustness over the whole sweep
+            conclusion  verdict  max_deviation  band  relative               worst_cell                                range
+              R_degree artifact       2.504529 0.200      True node_model=junction_only  0.0206 to 0.08963 (default 0.02558)
+              R_random artifact       1.798728 0.200      True node_model=junction_only  0.02748 to 0.1361 (default 0.04864)
+top50_corridor_overlap artifact       0.920000 0.200     False         tol1.0_stitchOFF                   0.08 worst overlap
+           giant_share artifact       0.819996 0.020     False         tol1.0_stitchOFF    0.1759 to 0.9995 (default 0.9959)
+             mean_path artifact       0.526065 0.100      True         tol1.0_stitchOFF         604.5 to 1871 (default 1275)
+       circuity_median artifact       0.425987 0.050      True             no_stitching       1.249 to 1.783 (default 1.251)
+          bridge_share artifact       0.341961 0.020     False         tol1.0_stitchOFF      0.1206 to 0.488 (default 0.146)
+            meshedness artifact       0.064725 0.005     False node_model=junction_only 0.01095 to 0.09852 (default 0.03379)
+
+[F-007] tolerance sensitivity, stitched vs unstitched
+            conclusion  range_with  range_without  damping_factor
+           giant_share    0.002318       0.746132      321.936705
+          bridge_share    0.007938       0.194993       24.564289
+            meshedness    0.010898       0.013806        1.266869
+             mean_path   32.443863     967.461656       29.819558
+    independent_cycles  200.000000     360.000000        1.800000
+              R_random    0.009409       0.021989        2.336927
+top50_corridor_overlap    0.120000       0.400000        3.333333
+
+[F-011] is the inverted attack ordering robust?
+                    cell  R_random  R_degree  R_betweenness worst_strategy  random_worse_than_betweenness
+                 default  0.048644  0.025576       0.129111         degree                           True
+           tolerance=1.0  0.044133  0.024086       0.123522         degree                           True
+           tolerance=2.0  0.053542  0.026872       0.119736         degree                           True
+            no_stitching  0.036499  0.022402       0.085730         degree                           True
+ node_model=station_only  0.030622  0.021774       0.146385         degree                           True
+node_model=junction_only  0.136142  0.089632       0.117044         degree                          False
+    match_conf=high_only  0.046703  0.022950       0.131006         degree                           True
+           parallel=mean  0.048644  0.025576       0.125036         degree                           True
+        dissolve_degree2  0.043281  0.026480       0.130725         degree                           True
+           prune_degree1  0.046587  0.026393       0.137003         degree                           True
+         merge_colocated  0.054068  0.020596       0.128307         degree                           True
+       gauge_constrained  0.050025  0.025836       0.122746         degree                           True
+            view=core_v2  0.039676  0.023516       0.088877         degree                           True
+            view=core_v4  0.027481  0.023671       0.076637         degree                           True
+         tol1.0_stitchON  0.044133  0.024086       0.123522         degree                           True
+        tol1.0_stitchOFF  0.051867  0.030502       0.107772         degree                           True
+         tol1.5_stitchON  0.048644  0.025576       0.129111         degree                           True
+        tol1.5_stitchOFF  0.036499  0.022402       0.085730         degree                           True
+         tol2.0_stitchON  0.053542  0.026872       0.119736         degree                           True
+        tol2.0_stitchOFF  0.029878  0.022623       0.127406         degree                           True
+
+  random worse than betweenness in 19/20 cells
+  worst strategy is 'degree' in 20/20 cells
+
+wrote cells.csv, verdicts.csv, damping.csv, attack_ordering.csv, rankings.json

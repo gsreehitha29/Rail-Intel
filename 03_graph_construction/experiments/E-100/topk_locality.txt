@@ -1,0 +1,24 @@
+=== is 'top-k central stations' k distinct PLACES, or runs of adjacent nodes? ===
+  top- 10:   6 distinct localities (connected runs), largest run   4,   1 of 10 are degree-2 pass-throughs (10%)
+  top- 50:  11 distinct localities (connected runs), largest run  17,  30 of 50 are degree-2 pass-throughs (60%)
+  top-100:  14 distinct localities (connected runs), largest run  35,  64 of 100 are degree-2 pass-throughs (64%)
+  top-200:  15 distinct localities (connected runs), largest run  42, 155 of 200 are degree-2 pass-throughs (78%)
+
+=== the Mughal Sarai cluster: adjacent nodes with near-identical betweenness ===
+  MGS    deg 6  bc 0.140518  name MUGHAL SARAI JN
+  XCBN   deg 5  bc 0.140515  name Xcbn
+  MGMY   deg 2  bc 0.140353  name MUGHAL SARAI MARSHALING YARD
+  ICBN   deg 4  bc 0.140252  name Icbn
+  spread across the cluster: 2.65e-04
+  -> in a near-tree, every node on a through-chain carries the same traffic,
+     so betweenness cannot discriminate within a chain. Module 1 must report
+     corridor-level criticality or deduplicate by locality.
+
+=== data-quality flag for the V5 audit: placeholder-looking names in the top 20 ===
+  5 of top 20 have node_name == node_code (no real station name):
+node_id name  betweenness
+   NWBV NWBV     0.153214
+    RAU  Rau     0.144356
+   XCBN Xcbn     0.140515
+   ICBN Icbn     0.140252
+   HATI HATI     0.118211

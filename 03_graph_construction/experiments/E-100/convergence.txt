@@ -1,0 +1,23 @@
+exact betweenness: 9,058 nodes, from cache
+
+=== betweenness sample-size convergence (vs exact) ===
+ sample_k  secs  spearman  kendall_tau  top50_overlap  max_abs_err
+       50  1.87  0.970039     0.878361           0.54     0.058493
+      100  3.74  0.979698     0.899126           0.64     0.027927
+      250  9.92  0.986373     0.918027           0.72     0.020847
+      500 19.55  0.990805     0.929771           0.86     0.014712
+     1000 38.75  0.994530     0.944082           0.98     0.008428
+     2000 81.77  0.997258     0.962506           1.00     0.006423
+
+=== top 10 nodes by EXACT distance-weighted betweenness ===
+node_id                         name zone  deg  betweenness
+   NWBV                         NWBV  SCR    3     0.153214
+    RAU                          Rau   WR    3     0.144356
+    MGS              MUGHAL SARAI JN  ECR    6     0.140518
+   XCBN                         Xcbn  ECR    5     0.140515
+   MGMY MUGHAL SARAI MARSHALING YARD  ECR    2     0.140353
+   ICBN                         Icbn  ECR    4     0.140252
+      G                    GONDIA JN SECR    4     0.139352
+    KMZ                KATNI MURWARA  WCR    5     0.138676
+    STA                        SATNA  WCR    5     0.136718
+    BZA                VIJAYAWADA JN  SCR    3     0.134711

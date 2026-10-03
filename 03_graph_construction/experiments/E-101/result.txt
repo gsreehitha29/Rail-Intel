@@ -1,0 +1,14 @@
+==============================================================================
+E-101  validation battery
+==============================================================================
+
+battery completed in 18s
+
+[V1] invariants: ALL PASS
+[V2] degree: favoured=exponential (LLR 7,159), max degree 7, [KUR06] met=True
+[V2] route km: 72,201 vs YB 69,439 (+3.98%); excl. zero-station -0.06% -- mechanism established: False
+[V3] completeness: 94.0% resolvable, 80.9% direct, 97.8% within 3 hops, 0 cross-component contradictions
+[V3b] stitching: raw gap 28.8 pp -> fair gap 8.2 pp (71% was definitional); Fisher OR 0.558, p=2.0e-16
+[V6] bridge share obs 0.1460 vs null 0.1833, z=-3.9
+
+wrote report.json, v3_strata.csv, and a 202-edge V5 audit frame

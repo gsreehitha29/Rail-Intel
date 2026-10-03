@@ -1,0 +1,54 @@
+==============================================================================
+E-100  metric baselines, criticality, resilience, communities
+==============================================================================
+
+[1] structural baselines
+    n_nodes                9,095
+    n_edges                9,689
+    n_components           18
+    giant_nodes            9,058
+    giant_edges            9,669
+    articulation_points    1,338
+    bridges                1,412
+    independent_cycles     612
+    articulation_share     0.1477
+    bridge_share           0.1460
+    meshedness             0.0338
+    tree_likeness          0.9367
+    vs QA_REPORT baselines: MATCH
+    speed coverage: 6,238/9,689 edges (64.4%), 60.0% of route km
+    paths[length_km] mean   1275.47  median   1213.89  hops  162.8  circuity median 1.251
+    paths[unit     ] mean    162.82  median    153.00  hops  162.8  circuity median nan
+
+[3] resilience -- percolation, R, and the sanity checks
+    random                   R=0.0435  f(SCF<0.5)=0.050  f(SCF<0.1)=0.100  [0s]
+    degree                   R=0.0227  f(SCF<0.5)=0.025  f(SCF<0.1)=0.050  [0s]
+    degree_adaptive          R=0.0287  f(SCF<0.5)=0.050  f(SCF<0.1)=0.050  [0s]
+    betweenness              R=0.1241  f(SCF<0.5)=0.100  f(SCF<0.1)=0.299  [16s]
+    betweenness_adaptive     R=0.0803  f(SCF<0.5)=0.100  f(SCF<0.1)=0.200  [32s]
+    service_load             R=0.1056  f(SCF<0.5)=0.050  f(SCF<0.1)=0.324  [0s]
+    service_load_adaptive    R=0.0983  f(SCF<0.5)=0.050  f(SCF<0.1)=0.299  [0s]
+
+    sanity: does the same code give the textbook answer elsewhere?
+      BA(3000,2) scale-free:  random R=0.4128  degree R=0.1010  -> hub attack much worse, as expected
+      path graph, same n:     random R=0.0157  -> a pure tree is even more fragile than ours (0.0435)
+      top-500 betweenness nodes induce 27 components, largest run 123 -> they lie contiguously along the trunk
+
+[4] communities -- two methodologically different algorithms
+    louvain     78 communities  Q=0.9646  largest  211  median  108
+              vs stated zone  NMI=0.689 ARI=0.269  (n=4,123)
+    infomap    865 communities  Q=0.8789  largest   29  median   10
+              vs stated zone  NMI=0.593 ARI=0.042  (n=4,123)
+
+[2] criticality -- worst bridges by nodes stranded
+       BOE-MFA    BARSOI JN              -> MAKURIA                strands  459 ( 5.1%)   136 trains  stitch=True
+       FKM-SUF    FAKIRAGRAM JN          -> SESAPANI               strands  310 ( 3.4%)    93 trains  stitch=True
+       KOJ-SUF    KOKRAJHAR              -> SESAPANI               strands  309 ( 3.4%)    93 trains  stitch=False
+       KOJ-SLKX   KOKRAJHAR              -> SALAKATI               strands  308 ( 3.4%)    93 trains  stitch=False
+      BSGN-SLKX   BASUGAON               -> SALAKATI               strands  307 ( 3.4%)    93 trains  stitch=False
+      BSGN-DTX    BASUGAON               -> DANGTAL                strands  306 ( 3.4%)    93 trains  stitch=False
+       DTX-NBQY   DANGTAL                -> NEW BONGAIGAON YARD    strands  305 ( 3.4%)    93 trains  stitch=False
+       NBQ-NBQY   NEW BONGAIGAON         -> NEW BONGAIGAON YARD    strands  304 ( 3.4%)    93 trains  stitch=False
+    stitched edges among top-50 severing bridges: 7/50 (14.0%) vs 23.2% of all edges
+
+wrote /home/claude/Rail-Intell/03_graph_construction/experiments/E-100/report.json, bridge_severance.csv, percolation_curves.csv, communities_*.csv
