@@ -1,0 +1,40 @@
+==============================================================================
+E-002  g01 acceptance + construction-sensitivity preview
+==============================================================================
+
+[1] shipped default vs SHIPPED_INVARIANTS
+    PASS  (0.7s)
+
+[2] rebuild equivalence vs edges.csv  (D-023)
+    shipped 9,689 / rebuilt 9,689 edges
+    identical pair set: True   length mismatches: 0
+    PASS
+
+[3] parameter cells
+    shipped default            n= 9,095 e= 9,689 comp=  18 giant= 99.6% cyc= 612 br= 14.6% km=  72,201
+    tol=1.0 stitch=ON          n= 9,084 e= 9,587 comp=  19 giant= 99.5% cyc= 522 br= 15.0% km=  72,527
+    tol=1.5 stitch=ON          n= 9,095 e= 9,689 comp=  18 giant= 99.6% cyc= 612 br= 14.6% km=  72,201
+    tol=2.0 stitch=ON          n= 9,102 e= 9,810 comp=  14 giant= 99.7% cyc= 722 br= 14.2% km=  72,014
+    tol=3.0 stitch=ON          n= 9,102 e= 9,810 comp=  14 giant= 99.7% cyc= 722 br= 14.2% km=  72,014
+    tol=1.0 stitch=OFF         n= 8,577 e= 8,566 comp= 137 giant= 17.6% cyc=  33 br= 48.8% km=  57,867
+    tol=1.5 stitch=OFF         n= 8,598 e= 8,816 comp=  50 giant= 59.4% cyc= 175 br= 41.3% km=  59,049
+    tol=2.0 stitch=OFF         n= 8,610 e= 8,989 comp=  24 giant= 92.2% cyc= 393 br= 29.3% km=  59,678
+    tol=3.0 stitch=OFF         n= 8,610 e= 8,989 comp=  24 giant= 92.2% cyc= 393 br= 29.3% km=  59,678
+    node_model=station_only    n= 8,615 e= 9,100 comp=   7 giant= 99.3% cyc= 491 br= 18.4% km=  63,482
+    node_model=junction_only   n= 2,029 e= 2,274 comp= 107 giant= 88.2% cyc= 352 br= 29.5% km=  71,744
+    dissolve_degree2           n= 8,980 e= 9,552 comp=  18 giant= 99.6% cyc= 590 br= 14.5% km=  71,923
+    prune_degree1              n= 8,782 e= 9,389 comp=   5 giant=100.0% cyc= 612 br= 12.1% km=  67,862
+    merge_colocated            n= 8,856 e= 9,322 comp=  18 giant= 99.6% cyc= 484 br= 15.0% km=  72,035
+    gauge_constrained          n= 8,875 e= 9,451 comp=  21 giant= 99.2% cyc= 597 br= 13.8% km=  69,869
+    view=core_v2               n= 7,999 e= 8,411 comp=  34 giant= 96.9% cyc= 441 br= 28.4% km=  61,105
+    view=core_v4               n= 7,700 e= 8,047 comp=  46 giant= 93.7% cyc= 383 br= 32.4% km=  57,967
+    match_conf=high only       n= 9,438 e=10,038 comp=  27 giant= 99.3% cyc= 627 br= 16.4% km=  72,519
+    parallel=mean              n= 9,095 e= 9,689 comp=  18 giant= 99.6% cyc= 612 br= 14.6% km=  72,382
+
+[4] F-007 -- tolerance sensitivity, stitched vs unstitched
+    giant-component share range  stitched  0.23 pp   unstitched 74.61 pp
+    bridge share range           stitched  0.79 pp   unstitched 19.50 pp
+    independent cycles range     stitched   200      unstitched   360
+    => stitching damps the tolerance sensitivity by 322x
+
+wrote /sessions/rcw-014hfbptfijcsaynanimx96q/mnt/Rail-Intell/03_graph_construction/experiments/E-002/cells.csv and /sessions/rcw-014hfbptfijcsaynanimx96q/mnt/Rail-Intell/03_graph_construction/experiments/E-002/summary.json

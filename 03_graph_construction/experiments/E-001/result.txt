@@ -1,0 +1,21 @@
+nodes            9,095
+edges            9,689
+components       18
+giant            9,058 (99.6%)
+giant edges      9,669
+articulation pts 1,338   <- handoff 4.7 says 1,341 / 4.9 says 1,338
+bridges          1,412   <- handoff 4.7 says 1,432 / 4.9 says 1,412
+bridge share     14.6%
+indep cycles     612   <- docs say 612
+degree mean/max  2.13 / 7   <- QA says 2.13 / 7
+deg==2 share     82.8%   <- docs say 83%
+route km         72,201   <- docs say 72,201
+
+parallel: n_parallel_corridors>1  581   <- 4.3 says 397, QA says 581
+parallel: parallel_differs        124   <- 4.3 says 98, QA says 124
+colocated (is_colocated)          249   <- 4.3 says 183, README says 249
+edges len<=0.051                  250
+any_stitch                        2,252
+
+seq rows 12,305  used_for_edges 11,662  offset>1.5 643
+nodes: station 8,621  op_junction 474  dissolvable 115

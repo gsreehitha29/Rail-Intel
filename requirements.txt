@@ -1,0 +1,31 @@
+# Rail-Intell — pinned environment
+#
+# Phase 3 analysis environment, verified 2026-10-03 (Python 3.10.12).
+# The Phase 2 pipeline (02_graph_inputs/pipeline/) runs under the same package
+# set; its original interpreter was CPython 3.10 (see the .pyc tags in
+# pipeline/__pycache__). The exact Phase 2 version pins were not recorded at the
+# time -- if a rebuild ever disagrees byte-for-byte with the shipped
+# graph_dataset/, capture `pip freeze` from the machine that produced it and
+# reconcile here before concluding the pipeline is non-deterministic.
+
+# core
+pandas==2.3.3
+numpy==2.2.6
+scipy==1.15.3
+pyarrow==25.0.1
+
+# graph
+networkx==3.4.2
+
+# geospatial (Phase 2 pipeline: s03/s04 spine reconstruction)
+shapely==2.0.6
+
+# string matching (Phase 2 pipeline: s06 tiered station matching)
+rapidfuzz==3.10.1
+
+# Phase 3 additions
+# community detection -- g03
+python-louvain==0.16
+infomap==2.8.0
+# plotting -- g06
+matplotlib==3.9.2

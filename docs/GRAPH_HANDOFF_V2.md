@@ -10,6 +10,13 @@
 
 ---
 
+> **Figure provenance (added 2026-10-03).** §4.3, §4.4 and §4.7 originally
+> carried figures measured before `s09` existed. They were recomputed
+> independently from the shipped edge list (`E-001`) and corrected here; the
+> discrepancy and its lesson are recorded as `F-003`. Where this document and
+> `02_graph_inputs/graph_dataset/QA_REPORT.txt` ever disagree again, **the QA
+> report wins** — it is regenerated every run, this document is prose.
+
 ## 1. What changed since v1
 
 v1 handed over a junction-level edge list plus a list of unresolved problems.
@@ -186,13 +193,15 @@ corridor attributes joined on `corridor_id`, plus provenance on every edge
 
 Measured edge cases you will hit:
 
-- **397 station pairs are produced by more than one corridor**, but only **98**
+- **581 station pairs are produced by more than one corridor**, but only **124**
   differ in length by more than 1 km. Suggestion: keep a simple `Graph` carrying
   the shortest, with `n_parallel_corridors` as an attribute — a `MultiGraph`
-  complicates every downstream algorithm for 98 real cases. If Module 3 wants to
-  count genuinely distinct parallel routes, those 98 are the ones that matter.
-- **183 edges come out at ~zero length** (co-located stations). Needs a rule:
-  merge the nodes, or floor the distance.
+  complicates every downstream algorithm for 124 real cases. If Module 3 wants to
+  count genuinely distinct parallel routes, those 124 are the ones that matter
+  (`parallel_differs`).
+- **249 edges come out at ~zero length** (co-located stations). Resolved by
+  `D-007`: kept as separate nodes, length floored at 0.05 km, `is_colocated`
+  flagged. Note `F-002` — that flag records the flooring, not the shortness.
 - **Gauge is a traversability constraint, not just a label.** 2,217 of 2,279
   corridors are Broad Gauge; 31 Metre, 29 Narrow, 1 Standard. Those 60 are not
   interoperable with the rest, so decide whether a shortest path may cross them.
@@ -209,7 +218,7 @@ adjacencies derived from 416,970 stop records:
 |---|---|
 | Service pairs with both stations present in the physical graph | **94.0%** |
 | ...of those, already a direct physical edge | **80.9%** |
-| ...resolving within 3 physical hops (skip-stop signature) | **98.0%** |
+| ...resolving within 3 physical hops (skip-stop signature) | **97.4%** |
 | ...whose endpoints fall in *different* physical components | **0** |
 | Physical edges carrying at least one direct service | **80.0%** |
 
@@ -330,10 +339,10 @@ So you have something to check your build against:
 nodes                 9,095   (8,621 station + 474 operational junction)
 edges                 9,689
 components               18   giant = 9,058 nodes (99.6%)
-degree                 mean 2.05, max 7; 83% of nodes are degree 2
+degree                 mean 2.13, max 7; 82.8% of nodes are degree 2
 independent cycles      612   -> the network is ~94% tree-like
-articulation points   1,341   (14.7% of nodes)
-bridges               1,432   (14.8% of edges)
+articulation points   1,338   (14.8% of giant-component nodes)
+bridges               1,412   (14.6% of giant-component edges)
 ```
 
 Two of those deserve comment. The degree distribution topping out at 7 with no
@@ -471,14 +480,15 @@ none of it blocks starting.
 ## 8. Reproducing everything
 
 ```bash
-python 02_graph_inputs/pipeline/run_all.py        # ~30s, rebuilds 02_graph_inputs/graph_inputs/ from raw sources
+python 02_graph_inputs/pipeline/run_all.py        # ~50s, rebuilds graph_inputs/ AND graph_dataset/ from raw sources
 ```
 
 Stages: `s01` canonical junctions → `s02` corridors → `s03` geometry extraction
 → `s04` spine reconstruction → `s05` junction coordinates → `s06` station
-matching → `s07` station sequences → `s08` assemble + QA. Each stage is
-idempotent and documented in its own module docstring. Requires `pandas`,
-`numpy`, `networkx`, `shapely`, `scipy`, `rapidfuzz`, `pyarrow`.
+matching → `s07` station sequences → `s08` assemble + QA → `s09` graph dataset
+→ `s10` verify dataset. Ten stages. Each is idempotent and documented in its own
+module docstring. Requires `pandas`, `numpy`, `networkx`, `shapely`, `scipy`,
+`rapidfuzz`, `pyarrow` — exact versions in `requirements.txt`.
 
 Nothing in `01_data_engineering/processed_data/`, the notebooks, or the original
 `*_initial.csv` files was modified. The v1 artifacts remain exactly as they

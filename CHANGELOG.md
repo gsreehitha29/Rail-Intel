@@ -112,3 +112,62 @@ notebook-cell-output intermediates. It closed the seven gaps raised in
 canonicalised, coordinates derived from corridor geometry for 2,028 of 2,029
 junctions, station matching made tiered and spatially constrained, and 12,305
 stations ordered along their corridors with true geodesic distance.
+
+---
+
+## 2026-10-03 — Phase 3 opened: roadmap, documentation apparatus, graph builder
+
+**For Sreehitha:** there is now a working, invariant-checked builder in
+`03_graph_construction/railgraph/`, and three measured findings that change what
+graph v1 should be. Read `docs/PHASE3_GRAPH_ROADMAP.md`, then `docs/FINDINGS.md`
+F-007, F-009 and F-010.
+
+Phase 3 remains yours. What is here is a reference implementation plus a
+validation harness you can run against your own build — `railgraph.load_graph()`
+raises `InvariantError` if a build does not reproduce the shipped
+9,095 / 9,689 / 99.6% / 72,201 km.
+
+### New
+
+- `docs/PHASE3_GRAPH_ROADMAP.md` — research-backed `g00`–`g07` plan, ~4–6 weeks.
+- `docs/LITERATURE.md` — 9 sources annotated, gap analysis, three paper claims.
+  The decisive point: **every published graph of the Indian railway network is
+  timetable-derived** (Sen et al. 2003: 587 stations; Bhatia et al. 2015: 809).
+  Ours is 9,095, physical, and cross-validatable because the timetable was never
+  used to build it.
+- `docs/DECISIONS.md` — 23 ADRs. 15 migrated from `GRAPH_HANDOFF_V2.md` §4.8,
+  6 open, 2 new accepted. No decision is accepted without an experiment ID.
+- `docs/FINDINGS.md`, `docs/EXPERIMENTS.md`, `docs/PAPER_OUTLINE.md`,
+  `docs/LIMITATIONS.md`, `docs/PROGRESS.md`.
+- `03_graph_construction/railgraph/` — `BuildSpec` (12 parameters), strict
+  loader, 4 representation transforms, named weight registry.
+- `requirements.txt` — pinned.
+
+### Findings that change graph v1
+
+| | Finding | Consequence |
+|---|---|---|
+| **F-007** | Junction stitching damps placement-tolerance sensitivity by **322×** (0.23 pp vs 74.61 pp) | The headline result for the paper's method claim |
+| **F-009** | Dissolving the 115 degree-2 junctions **destroys 22 independent cycles** and is order-dependent | **`D-017`: do not dissolve.** It is not the free operation street-network practice assumes |
+| **F-010** | `match_conf='high'` only gives **more** nodes (9,438 vs 9,095) — rejecting a match splits a node, it does not delete one | Stricter matching is not safer; it manufactures 349 topology points |
+| **F-008** | `offset_km` maxes at 1.9989 — `s07` already caps at 2 km | Tolerance has 3 distinct levels, not 5 |
+
+### Corrected
+
+- `docs/GRAPH_HANDOFF_V2.md` §4.3, §4.4, §4.7, §8 carried pre-`s09` figures
+  contradicting `QA_REPORT.txt` (`F-003`). Six regions fixed — 397→581 and 98→124
+  parallel pairs, 183→249 co-located, 1,341→1,338 articulation points,
+  1,432→1,412 bridges, degree mean 2.05→2.13, 98.0%→97.4% three-hop, 8→10
+  stages. A provenance banner now states that the QA report wins any future
+  disagreement.
+- `F-002` / `D-021`: `is_colocated` records that an edge's length *was floored*,
+  not that the stations are close. Edge `E000454` (AMPR–PGK) is 50 m and
+  unflagged. `railgraph` adds unambiguous `length_below_floor` and
+  `is_short_edge` alongside it.
+
+### Unchanged
+
+Nothing in `01_data_engineering/`, `02_graph_inputs/pipeline/` or
+`02_graph_inputs/graph_dataset/` was modified. Phase 3 reimplements `s09`'s
+construction under `D-023` rather than refactoring it, and asserts equivalence
+on every run.
