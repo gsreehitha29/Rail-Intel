@@ -883,6 +883,8 @@ networks (bounded degree, no hubs) is the explanation rather than an excuse.
 | GeoJSON | 1 edge / 1 node omitted, fully accounted (`F-021`) | 7.95 MB | — |
 | (source CSV) | — | 2.8 MB | 0.05 s |
 
+*Revision-1 table. The round-trip checked counts and one length sum, not attributes; the GraphML was missing 21 columns (`F-046`, `D-039`). GeoJSON is now complete. Current sizes: GraphML 11.9 MB, parquet 0.88 MB, GeoJSON 11.7 MB.*
+
 **Decision for `D-016`: ship all three, none exclusively.** Parquet is 9× smaller
 than GraphML and **42× faster to load** than it, so it is the format the Phase 4
 modules should use. GraphML is the citable graph-native archive format and the
@@ -893,3 +895,1000 @@ true track alignment** — the corridor spine is not retained per edge by `s09`.
 Pickle is rejected: version-fragile, Python-only, fails `[WIL16]`
 Interoperability. A graph database is rejected: operational burden with no
 analytical gain at 9,095 nodes.
+
+
+---
+
+## F-026 — 42.9% of corridor–station incidences never matched, and long edges stand in for them
+**Class:** critical defect · **Evidence:** `E-300` part 5 · **All modules**
+
+The GIS declares, per corridor, how many stations lie on it. Across the corridors
+the graph uses, it declares **21,560** station placements; `s06`/`s07` matched
+**12,305**. Shortfall **9,255 (42.9%)**.
+
+Where a station is not placed, `s09` does not create two edges through it — it
+creates one long edge spanning the gap:
+
+| corridor shortfall | edges | share | route km | share of km |
+|---|---|---|---|---|
+| found ≥ declared | 4,854 | 50.1% | 29,130 | 40.4% |
+| 1–2 missed | 1,892 | 19.5% | 13,492 | 18.7% |
+| 3–5 missed | 879 | 9.1% | 7,291 | 10.1% |
+| 6–10 missed | 869 | 9.0% | 8,948 | 12.4% |
+| >10 missed | 1,193 | 12.3% | 13,309 | 18.4% |
+
+A defect signature of **≥3 missed and length >10 km** isolates **766 edges (7.9%)
+carrying 17,722 km — 24.5% of all route km**. On 40.9% of those, `service_load = 0`:
+no scheduled train traverses the edge as a single hop.
+
+Worst instances: NIZAMABAD→PEDDAPALLI 136.0 km (16 declared, 2 found);
+MYSORE JN→YESVANTPUR JN 125.6 km on a corridor whose spine is **1.4 km**.
+
+**Why it matters.** A 136 km single hop is a shortcut in every path computation —
+it shortens paths, misplaces betweenness, deflates circuity, and overstates
+connectivity and redundancy. Modules 1–3 consume exactly these quantities.
+
+**Bound.** `noofstations` is itself a corridor-level constant (`F-027`) and
+unaudited; some shortfall is legitimate (goods points, closed halts, stations
+absent from the master). 42.9% is an **upper bound on error**; the defect-signature
+subset is the defensible core.
+
+**Consequence for prior findings.** `F-019`'s route-km reconciliation is weakened
+— a quarter of the km it reconciles is suspect. `F-015` needs re-reading: long
+stitched edges are matching artifacts, not topological repairs.
+
+---
+
+## F-027 — Edge attributes are corridor constants stored at edge granularity
+**Class:** publishable (methodological) · **Evidence:** `E-300` part 1
+
+Share of corridors in which a GIS attribute takes one value across all segments:
+
+| attribute | constant within corridor | true granularity |
+|---|---|---|
+| `type` (gauge) | 99.09% | corridor |
+| `noofstations` | 98.87% | corridor |
+| `nooflanes` | 97.09% | corridor |
+| `tracklength` | 97.44% | corridor |
+| `speed` | 96.62% | corridor |
+| `railwayzone` | 96.62% | corridor |
+| `tunnel_yn` | 96.23% | corridor |
+| **`bridge_yn`** | **16.92%** | **segment** |
+
+**119,446 GIS segments carry only 2,305 distinct corridor-level values.** The
+effective sample size for every attribute except `bridge_yn` is 2,305 — not
+119,446, and not the 9,689 edges that now display them.
+
+**Why it matters for the paper.** Two edges on one corridor are not two
+observations. Any regression, correlation or test over edge attributes is
+overconfident by roughly the edge-to-corridor ratio. This is a general hazard in
+network construction from segment-oriented GIS: the join to segments *looks* like
+it produces per-segment attributes, and silently does not.
+
+---
+
+## F-028 — The chord/spine length error is concentrated, and the spine measure has its own failure regime
+**Class:** publishable · **Evidence:** `E-300` part 2 · **Supersedes the scope of `D-024`**
+
+`length_km` was believed to be a haversine chord — **wrong, see `F-042`**: it is
+the along-spine measure on non-stitch edges and the chord only on stitch edges.
+The along-track distance is recoverable by
+differencing `station_sequences.measure_km`, which Phase 2 computed and never used.
+
+Aggregate understatement **1,667 km (2.88%)** over 9,247 pairs — but concentrated:
+p90 = 1.088, p95 = 1.156, p99 = 1.484, max 13.05. **17.7% of pairs understated by
+>5%, 8.6% by >10%, 2.6% by >25%.**
+
+The spine measure cannot simply be substituted: **12.9% of pairs report an
+along-track distance shorter than the straight line, which is impossible.** The
+cause is projection collapse, monotonic in offset from the spine:
+
+| max offset | pairs | impossible | median ratio |
+|---|---|---|---|
+| <0.1 km | 7,158 | 1.8% | 1.009 |
+| 0.1–0.25 | 456 | 11.2% | 1.004 |
+| 0.25–0.5 | 375 | 36.3% | 0.979 |
+| 0.5–1.0 | 660 | 58.6% | 0.924 |
+| 1.0–1.5 | 598 | **81.8%** | 0.644 |
+
+**New coupling.** `D-004` admits offsets up to 1.5 km — exactly the band where the
+spine measure fails. Tolerance and length-source are not independent factors, and
+the `g05` sweep has treated tolerance as one-factor throughout.
+
+**Conclusion.** Neither pure chord nor pure spine. Hybrid with explicit
+provenance (`D-026`).
+
+---
+
+## F-029 — Sinuosity recovers all four of India's mountain railways with no terrain input
+**Class:** publishable (external validation) · **Evidence:** `E-300` part 3
+
+Ranking 871 corridors by along-track/chord ratio on trustworthy pairs only:
+
+| rank | corridor | sinuosity | identity |
+|---|---|---|---|
+| 1 | Matheran ↔ Neral Jn NG | 2.653 | Matheran Hill (UNESCO tentative) |
+| 2 | Darjeeling ↔ New Jalpaiguri Jn | 2.007 | Darjeeling Himalayan (**UNESCO 1999**) |
+| 3 | Kalka ↔ Shimla | 1.875 | Kalka–Shimla (**UNESCO 2008**) |
+| 4 | Padua ↔ Shrungavarapukota | 1.688 | Araku ghat |
+| 5 | Barkhera ↔ Budni | 1.643 | Budni ghat |
+| 6 | Mettupalayam ↔ Udagamandalam | 1.509 | Nilgiri Mountain (**UNESCO 2005**) |
+
+**All four recognised mountain railways in the top 6 of 871 — the top 0.7%.** The
+remainder of the top 12 is Baramula–Jammu Tawi, Castle Rock–Kulem (Braganza
+ghat), Lonavla–Palasdhari (Bhor ghat), Dantewara–Jagdalpur — every one a known
+mountain section.
+
+The pipeline has no elevation, gradient, terrain or heritage input. This is
+ground truth from entirely outside the data, and it converts `F-028` from a
+precision complaint into a substantive one: the chord does not round distances
+down, it **erases the topographic constraint** that defines these corridors.
+
+Also a new attribute in its own right (`sinuosity`): terrain difficulty normally
+requires a DEM; here it falls out of construction geometry.
+
+---
+
+## F-030 — The bridge inventory is real but fails cross-zone validation
+**Class:** publishable (negative result) · **Evidence:** `E-300` part 4
+
+The GIS splits polylines **at structures**: 48.05% of segments carry
+`bridge_yn = Y`, with median length **22.7 m** against **686.4 m** for unflagged
+segments. The flagged segments are bridge decks, so per-edge bridge count and
+bridged metres are derivable. The shipped `bridge_present` is a boolean OR, true
+on **96% of edges** — near-zero information.
+
+Validated against Rajya Sabha Q.371 (official bridges per zone):
+
+| | |
+|---|---|
+| GIS bridge segments | 51,811 |
+| official | 163,810 |
+| capture rate | **0.316** |
+| Spearman / Pearson | 0.703 / 0.499 |
+| capture range | **0.006 (NFR) → 0.638 (WR)** |
+
+NFR shows 47 segments against an official 7,804 — essentially nothing, in one of
+the most bridge-dense terrains in the country.
+
+**Verdict:** derive it, but it is **not fit for absolute counts or cross-zone
+comparison**; valid only as within-zone or within-corridor relative density. This
+is the clearest case in the project of an attractive attribute that validation
+*demotes* rather than confirms — and the reason to validate before shipping.
+
+---
+
+## F-031 — A third of travel times are a constant we chose
+**Class:** defect (honesty) · **Evidence:** `E-300` part 5
+
+`speed_kmph` is non-null on **64.38%** of edges (49.8% at corridor level).
+`weights.py` fills the remainder with `FALLBACK_SPEED_KMPH = 50.0`.
+
+So `travel_time_proxy` is 64% corridor-declared speed (itself `F-027`) and **36%
+a constant we invented**, with nothing in the output distinguishing them. Any
+isochrone, travel-time centrality or reachability result inherits that
+composition silently.
+
+---
+
+## F-032 — Phase 2 detected attribute conflicts and never propagated them
+**Class:** defect · **Evidence:** `E-300` part 5
+
+`corridors.csv` carries `speed_kmph_conflict` (14), `gauge_conflict` (11),
+`no_of_lanes_conflict` (65), `railway_zone_conflict` (59),
+`any_attribute_conflict` (**200 corridors, 8.78%**).
+
+On those 200 the "corridor constant" is not constant and Phase 2 arbitrated a
+value. **None of these flags reach the edge table.** An edge presents an
+arbitrated value with no marker. Same principle as `F-021`: an inferred value
+must be distinguishable from a measured one.
+
+---
+
+## F-033 — `state` is not recoverable from any in-repo source
+**Class:** gap (external dependency) · **Evidence:** `E-300` part 5 · **Module 2**
+
+| | |
+|---|---|
+| `state` on nodes | 45.77% |
+| on station nodes | 48.29% |
+| obtainable from `cleaned_stations.csv` | **48.29% — identical** |
+
+The station master holds nothing the graph lacks. Module 2 (accessibility,
+regional equity) cannot proceed on half-labelled nodes.
+
+Coordinates, however, are present on 9,094 of 9,095 nodes. Reverse geocoding
+against an administrative boundary file gives state *and* district at ~100%,
+derived uniformly rather than inherited patchily — strictly better than the 48%
+available by join. The one new external dependency worth taking on (`D-031`).
+
+---
+
+## F-034 — Two service columns of different epistemic status, named as if identical
+**Class:** defect (semantics) · **Evidence:** `E-300` part 5
+
+`service_direct` (trains observed stopping at both ends consecutively) and
+`service_load` (trains projected onto the physical path, including expresses that
+skip both ends) differ on **36.5% of edges**; means 36.3 vs 49.5. On **1,031
+edges `service_direct = 0` while `service_load > 0`** — carried only by trains
+stopping at neither endpoint.
+
+One is observation, the other inference. The names say neither. Compare `F-002`
+(`is_colocated`) — the third instance of the same failure mode in this dataset,
+which is itself worth stating in the paper: **naming is a provenance surface.**
+
+---
+
+## F-035 — Parallel routes with genuinely different attributes are discarded
+**Class:** limitation · **Evidence:** `E-300` part 5 · **Module 3**
+
+`parallel_policy = "shortest"` keeps one edge where several corridors connect the
+same pair. **581 edges (6.0%) have ≥1 parallel; on 124 the parallels carry
+genuinely different attributes** (differing gauge, speed or track count).
+
+Those alternatives are real physical redundancy, and a resilience study is the
+last place to discard redundancy. `D-013`'s two-view approach handles attribute
+*filtering* but not this; `D-006`'s parallel policy was chosen before resilience
+was the use case.
+
+
+---
+
+## F-036 — The declared speed is a sanctioned maximum; trains achieve half of it
+**Class:** publishable (methodological) · **Evidence:** `E-301` parts 1–2 · **Module 2**
+
+The graph weights travel time by `speed_kmph`, the GIS sectional speed. Joining
+the 416,970-record schedule set to the physical edges gives an observed run-time
+on **6,479 of 9,689 edges (66.9%, 62.7% of route km)**:
+
+| | |
+|---|---|
+| implied speed from observed run-time | **median 53.5 km/h** (p10 27.1, p90 73.6) |
+| declared sectional speed, same edges | median 110.0 km/h |
+| **observed / declared** | **0.513** |
+
+Every travel-time result the project has produced **understates journey time by
+roughly a factor of two.**
+
+**The sharper point.** On edges with no declared speed, `weights.py` substitutes a
+flat 50 km/h — and the observed median is 53.5 km/h. **The invented constant is
+closer to reality than the real attribute.** An edge with a declared speed is
+weighted *worse* than an edge without one, and no coverage statistic would ever
+reveal that: coverage counts presence, not correctness.
+
+**Why it is publishable.** Networks built from infrastructure GIS routinely weight
+by posted or design speed. This is a measured demonstration, on a national
+network, that the practice is biased roughly 2× — and that a naive constant
+outperforms it. The observed run-time also has **better coverage (66.9%) than the
+declared speed it would replace (64.4%)**.
+
+**Caveat to carry.** Timetabled run-times already include operational padding, so
+they are what a passenger experiences rather than a physical capability. That is a
+property to state, not a defect.
+
+---
+
+## F-037 — Run-time variability is a congestion signal with no counterpart in the graph
+**Class:** publishable · **Evidence:** `E-301` part 3 · **Modules 2, 3**
+
+p10/p90 run-time bands exist on 6,403 edges. Median spread **4.0 min**, p90 spread
+**11.9 min**, and on **28.8% of edges the slowest trains take more than twice as
+long as the fastest**.
+
+A scalar edge weight cannot express this. The distinction matters for resilience:
+an edge whose traversal time varies 2× is operationally different from one that
+does not, independently of its length or its declared speed.
+
+This also supports a **stochastic edge cost** rather than a deterministic one —
+rare in the rail-network literature, and available here without any new data.
+Part of the spread is express/stopping mix rather than congestion; conditioning on
+train class separates the two (`E-301` part 4 shows 16 classes are available).
+
+---
+
+## F-038 — A directed graph is buildable from in-repo data
+**Class:** capability · **Evidence:** `E-301` part 5 · **Revisits `D-033`**
+
+**88.5% of trains declare a `return_train`, and 99.2% of those resolve in the
+train master.** Combined with stop sequences, up/down pairing is available for the
+large majority of services.
+
+`D-033` scoped v1 as undirected and recorded the cost: every bottleneck and
+criticality result is direction-blind. That scoping was correct for v1 but is not
+forced by the data — it was a choice, and v2 can revisit it.
+
+Direction is a property of **services, not of track**, so it belongs in a service
+layer rather than on the physical edge. If measured asymmetry turns out to be
+negligible, that is itself a publishable result: it converts the undirected
+simplification from an assumption into a justified one.
+
+---
+
+## F-039 — Operational node roles are derivable and entirely absent from the graph
+**Class:** capability · **Evidence:** `E-301` part 6 · **Modules 1, 2, 3**
+
+| derivable attribute | basis | coverage |
+|---|---|---|
+| `dwell_median_min` | 383,958 schedule rows with both arrival and departure | **6,464 nodes = 75.0% of station nodes** |
+| `trains_originating` | stop_sequence 1 | 723 stations |
+| `is_interchange` / `n_corridors` | `station_n_corridors` | in-repo |
+
+Dwell time separates a wayside halt (median 0 min) from Delhi (27.5 min), and
+terminus status separates the 723 stations that originate services from the 7,900
+that do not. The current node table expresses station *role* only through raw
+degree, which conflates a six-way junction in open country with a major terminus.
+
+For percolation this matters directly: removing a terminus is not the same event
+as removing a through station of equal degree.
+
+---
+
+## F-040 — True per-edge alignment geometry is recoverable; the shipped GeoJSON is schematic
+**Class:** capability · **Evidence:** `E-301` part 6
+**Implemented 2026-10-04 (`D-040`, `E-402`):** 5,591 edges (57.7%) now carry true alignment in v1.1. The recovery needs the spine-orientation rule (`F-047`), which this finding did not anticipate.
+
+`corridor_spines.parquet` holds **2,278 corridor LineStrings, mean 336
+coordinates each**, as WKB. Stations carry `measure_km` along those spines.
+Slicing a spine between consecutive `measure_km` values yields the real alignment
+of each edge.
+
+The shipped GeoJSON draws a straight chord between endpoints and says so in the
+manifest. That is honest but schematic: it is the difference between a diagram and
+a map. Recovering the alignment also provides the geometric basis for curvature,
+future elevation sampling, and a credible cost model for Module 4.
+
+Combined with `F-028`, this closes the geometry story: the spine supplies both the
+true length and the true shape, and both were computed in Phase 2 and left unused.
+
+---
+
+## F-041 — The national route-km agreement was two errors cancelling; and the suspect edges carry real length
+**Class:** publishable (validation) · **Evidence:** `E-102` · **Resolves `F-019`**
+
+`F-019` compared one number to one number: our route km against the Year Book,
++3.98%, reconciling to −0.06% when zero-station corridors are excluded, with no
+mechanism established. One comparison cannot distinguish a correct total from two
+errors cancelling.
+
+Run seventeen times — once per zone, against published 2021 broad-gauge route km:
+
+| | |
+|---|---|
+| zones compared | 17 |
+| national total | ours 68,430 km vs reference 64,662 km — **+5.83%** |
+| per-zone deviation | median **+7.7%**, sd **9.1 pp** |
+| range | **−15.2% (Central)** to **+19.1% (Western)** |
+| within ±10% | 11 of 17 · within ±20%: 17 of 17 |
+| correlation of per-zone totals | **Pearson 0.977, Spearman 0.944** |
+
+**Result 1 — the national agreement is not a uniform offset.** Deviations scatter
+across 34 percentage points and change sign. Central Railway is 15% short while
+Western is 19% long. The national figure is the average of zone errors in
+opposite directions partially cancelling, which is precisely what a single-number
+check cannot see. `F-019`'s −0.06% reconciliation is therefore **not evidence of
+correctness**, and should not be cited as validation.
+
+**Result 2 — and this one was not predicted.** Excluding the `F-026` suspect
+edges makes agreement **much worse**, not better: the national total falls to
+**−19.85%** and median absolute zone deviation rises from 8.6% to 18.5%.
+
+If the suspect edges were spurious extra length, removing them would move us
+toward the official figure. They move us far past it. **So the suspect edges are
+carrying real route kilometres.** The defect they mark is *topological, not
+metric*: the track exists and its length is approximately right, but it is
+modelled as one long edge instead of several short ones through stations that
+were never placed.
+
+**This materially changes how `F-026` should be used.**
+
+| quantity | affected by the defect? |
+|---|---|
+| total or per-zone route km | **no** — the length is real |
+| node count, degree, component structure | **yes** — intermediate nodes are missing |
+| shortest paths, betweenness, circuity | **yes** — a long hop is a shortcut |
+| accessibility counts by station | **yes** — the stations are absent |
+
+`suspect_long_edge` (`D-025`) must therefore be documented as a **path-analysis
+caveat, not a length filter**. Excluding those edges from a distance aggregate
+would introduce a 20% error to avoid a bias that does not exist there.
+
+**What remains unexplained.** A systematic +6 to +8% lean against a 2021
+reference. Candidates: our undated snapshot post-dates 2021 (the network grew);
+double-digitised parallel alignments inflate some corridors (the GIS geometry is
+~7% longer than its own declared `tracklength`); or the chord/spine question
+(`F-028`) biases differently by zone. Not resolved here. The zone-level
+correlation of 0.977 says the structure is right even where the level is not.
+
+## F-042 — The v1.0 `length_km` was already the along-spine measure, not the chord `E-300` assumed
+
+`E-300` part 2 is labelled *"shipped haversine chord vs recoverable along-track
+distance"* and reports a chord total of 57,961.6 km as **"what the graph
+ships"**, concluding the graph understates length by 2.88% (1,667 km). It
+computed both measures from `station_sequences` and the station master, and
+never compared either against `edges.csv.length_km`.
+
+Measured directly against the shipped edge table (`E-400`):
+
+| edge class | n | matches node-pair chord (±1 m) | matches Δ`measure_km` (±1 m) |
+|---|---|---|---|
+| non-stitch | 7,437 | **13.7%** | **98.4%** |
+| stitch | 2,252 | **82.2%** | 6.6% |
+
+The shipped graph was **already a de facto hybrid**: the along-spine measure on
+consecutive station placements, the chord on stitch edges (where `measure_km`
+is undefined and `_finalise` falls back to haversine). It arrived there by the
+structure of the build, not by a rule — `_build_edge_records` computes
+`meas[i+1] − meas[i]`, which is the spine.
+
+**Consequences.**
+
+1. `D-026`'s projected effect (+2.88%, +1,667 km) was computed from the wrong
+   base and is wrong. The hybrid *rule* is unaffected and still correct; its
+   measured effect is **+219.9 km (+0.30%)** on 1,286 edges (`E-400`).
+2. On this base the rule's main job is the reverse of what the ADR implies: it
+   replaces **impossibly short spines with the chord** (1,123 collapse cases),
+   rather than replacing chords with spines.
+3. The manifest caveat `length_km_bias` — *"spine shortcutting affects 17.1% of
+   consecutive pairs, median 5% short"* — was **correct all along** and had
+   already said the shipped value was the spine. `E-300` contradicted an
+   existing, accurate caveat and nothing caught it for three days.
+
+**Why it was missed.** `E-300` validated its two candidate measures against
+each other and against external ground truth (the mountain railways, `F-029`),
+which is why its *ranking* results all stand. It never validated its
+description of the baseline against the artifact. An audit that recomputes a
+quantity from source is not thereby checking what the artifact contains.
+
+**Lesson, and it generalises.** The project's rule is "no number in a document
+unless a script produces it." This finding adds the missing half: *a claim
+about what the artifact contains must be read from the artifact*, not derived
+alongside it. `E-400` now asserts the baseline it is diffing against.
+
+---
+
+## F-043 — `D-026` is silent on stitch edges, and applying the rule to them anyway moves more length than the fix itself
+
+`D-026` and `ATTRIBUTE_ROADMAP` §A1 specify the hybrid for *consecutive station
+placements*: `spine = |Δmeasure_km|`, `chord = haversine(a, b)`. Stitch edges
+(`D-005`) do not arise that way. They reach their length through a different
+path in `_finalise` — the corridor geodesic where no station was placed, the
+endpoint chord otherwise — and the ADR says nothing about them.
+
+A first implementation applied the rule uniformly. Effect:
+
+| | edges changed | net route km |
+|---|---|---|
+| non-stitch (the specified case) | 1,286 | **+219.9** |
+| stitch (unspecified) | 892 | **+1,073.1** |
+| total | 2,178 | +1,293.0 |
+
+**The unspecified case moved 4.9× more length than the specified one** — an
+ADR's silence producing the larger share of its own effect.
+
+**Decision taken (`E-400`).** Stitch edges keep their as-built length and
+declare it: `length_source = stitch_as_built` on all 2,252. The hybrid applies
+only where `D-026` specified it. A rule for stitch-edge length is a separate
+decision requiring its own evidence, and W1 (true alignment geometry) is the
+natural place to take it, since slicing the corridor spine gives a real
+measurement for exactly these edges.
+
+**Why not just apply it.** 1,073 km is 1.5% of the network arriving on a rule
+nobody examined for this case, inside a release whose entire purpose is that
+values declare their provenance. Shipping it would have been the precise
+failure v1.1 exists to prevent.
+
+## F-044 — The project's headline robustness verdict was not regenerable by any script
+
+`E-200` shipped four verdict files: `verdicts.csv` (all 20 cells) plus
+`verdicts_tierA.csv`, `verdicts_tierB.csv` and `verdicts_tierC.csv`. Its
+`run.py` writes only the first. **No script in the repository produced the
+tiered files**, and the tier memberships existed nowhere in code — only as
+prose in `GRAPH_HANDOFF_V2.md` §4.5 and `VALIDATION_v1.md` §4.1.
+
+This matters more than a missing file, because **Tier A is the claim**. "Tier
+A: 0 artifacts of 8 conclusions" is cited in `VALIDATION_v1.md`, in
+`publication/QUALITY_NOVELTY_RELEVANCE_REPORT.md`, in the `C3` claim and in
+`PAPER_OUTLINE.md` §7. The untiered `verdicts.csv` says **artifact** on all
+eight conclusions, because it includes cells that deliberately negate a decided
+operator (`no_stitching` undoes `D-005`; `node_model=junction_only` abandons
+the station-level thesis). Those cells breaking things is the *justification*
+for the operators, not a finding against the graph. So the number the paper
+cites and the number `make` can produce were different numbers, and only the
+unproducible one was correct.
+
+The project's stated rule is *"if a figure or a table cannot be regenerated by
+`make`, it does not go in the paper"* (`PAPER_OUTLINE.md`). The single most
+load-bearing table in the validation section was violating it.
+
+**Fixed (`E-401`).** `TIER_A`, `TIER_B_ADDS`, `TIER_C_ADDS` and
+`verdicts_for_tier()` now live in `railgraph/sensitivity.py`, and `E-401`
+asserts on every run that they reproduce `E-200`'s published Tier A **exactly**
+— all eight verdicts and all eight deviations to 1e-9. That assertion is the
+real fix: the tier definitions are now not just in code but checked against the
+published artifact, so a future edit to either cannot silently diverge.
+
+**Why it survived three days of review.** The tiered files were present and
+internally consistent, and every document that cited them cited them
+correctly. Nothing was wrong with the numbers — only with their
+reproducibility, which no amount of reading the numbers would reveal. The
+check that catches this class of defect is "regenerate it and diff", not
+"read it again".
+
+---
+
+## F-045 — Tier A survives length derivation: the sensitivity claim is now broader than it was
+
+`E-200`'s own limitations section stated that the sweep varied construction and
+representation *parameters* and **never varied how length or travel time were
+derived**, so it could not have detected `G-01` or `G-02`. v1.1 made length
+derivation switchable, so `E-401` closed the gap with 10 new cells: four length
+modes, two offset-gate settings, and the tolerance × length_source interaction
+`D-026` required.
+
+**Result: Tier A + derivation = 0 artifacts, 0 verdicts changed.**
+
+| conclusion | Tier A | + derivation | worst cell now |
+|---|---|---|---|
+| `giant_share` | robust | **robust** | gauge_constrained |
+| `mean_path` | robust | **robust** | **tol1.0_lengthhybrid** |
+| `circuity_median` | robust | **robust** | **length=spine** |
+| `R_random` | robust | **robust** | merge_colocated |
+| `R_degree` | robust | **robust** | merge_colocated |
+| `top50_corridor_overlap` | robust | **robust** | gauge_constrained |
+| `bridge_share` | conditional | **conditional** | prune_degree1 |
+| `meshedness` | conditional | **conditional** | merge_colocated |
+
+Route km across the derivation cells spans **71,445 km (`chord`) to 73,193 km
+(`spine`)** — a 2.4% band — and the hybrid sits at 72,421.
+
+**Two conclusions now have their worst cell at a derivation cell** rather than a
+construction one: `mean_path` (worst at `tol1.0_lengthhybrid`, 2.56% vs 2.53%)
+and `circuity_median` (worst at `length=spine`, 1.68% vs 1.58%). Both remain
+comfortably inside their bands, but it says the derivation choice is now a
+*peer* of the construction choices for distance-weighted measures, not a
+second-order detail. Circuity is the measure to watch: it is defined as a ratio
+of network to great-circle distance, so it is the one conclusion whose
+definition contains the quantity being varied.
+
+**What this licenses, and what it does not.** The `C3` claim may now be stated
+over construction, representation **and derivation** choices — a materially
+stronger claim than `E-200` alone supported, and the first time the project can
+say a distance-weighted conclusion is robust to how distance was obtained. It
+remains silent on **travel-time** derivation, which `W2` has not yet made
+switchable: `time_source` is still an untested factor, and `F-036`'s 2× gap
+means it is the one most likely to produce an artifact when it is tested.
+
+
+## F-046 — The GraphML export silently lacked 21 columns, and the round-trip test could not see it
+
+Sreehitha's Phase 3 plan asked that the graph preserve "all the attributes already
+generated". Checking the released artifacts against `nodes.csv` / `edges.csv`
+(2026-10-04) found that the **GraphML — the file `D-016` designates the citable
+primary — did not**:
+
+| | missing from the GraphML |
+|---|---|
+| nodes (10) | `in_scope`, `match_confidence`, `match_method`, `spatial_gap_km`, `coordinate_shared`, `is_dissolvable`, `degree`, `component_id`, `in_giant_component`, `dataset_version` |
+| edges (11) | `gauge_name`, `zone_name`, `bridge_present`, `tunnel_present`, `n_parallel_corridors`, `parallel_differs`, `is_colocated`, `reconstruction_status`, `attr_complete`, `recon_clean`, `dataset_version` |
+
+Infrastructure attributes (`bridge_present`, `tunnel_present`) were among the
+losses, so a consumer of the primary artifact could not do the one thing the
+project exists for. Two further defects sat in the same file: integer attributes
+(`service_direct`, `service_load`, `n_corridors`) were written as **strings**,
+and `n_tracks`, `speed_kmph`, `latitude`, `longitude` were each declared with
+**two GraphML types** (double *and* string), because a null was written as `""`.
+
+**Why the test passed.** `E-007`'s round-trip compared node count, edge count and
+one length sum. Nothing asked whether each *attribute* survived. The cause was a
+hand-maintained allow-list (`GRAPHML_NODE_ATTRS`, `GRAPHML_EDGE_ATTRS`) that nobody
+had to keep in step with the graph.
+
+**Fix (`D-039`).** Columns are now discovered from the graph itself, so an
+allow-list cannot go stale; nulls are omitted rather than written as `""`; and the
+round-trip compares every value of every node and edge in GraphML, parquet and
+GeoJSON (350,570 values each), plus every column and value of the Phase 2 CSVs.
+
+**The fix had the same bug, and a self-comparison would not have found it.** The
+rewritten cleaner still turned Python `int` into `str`. The GraphML check passed
+because it compared the file against the *same* cleaned values; the parquet check
+found it because parquet kept the true type. A verifier that derives its
+expectation from the code under test certifies nothing — which is why the
+shipped-CSV comparison is a separate, independent check.
+
+Revision-1 hashes, for traceability: GraphML `1fcb701438d1…`, edges.geojson
+`eb05b4c8f610…`.
+
+## F-047 — Slicing corridor spines naively puts half the geometry in the wrong place, and every length check still passes
+
+`station_sequences.measure_km` is the distance along the spine *as Phase 2
+oriented it*. `corridors.orientation` is `reversed_to_a` for **1,090 of 2,279**
+corridors (`as_built` 1,183, `unknown` 5), meaning that orientation is the reverse
+of the stored LineString. The first geometry build ignored it.
+
+| | slicing at raw `measure_km` | with orientation applied |
+|---|---|---|
+| spine edges whose slice ends >0.5 km from their nodes | **2,736 of 5,591** | **0** |
+| edges drawn reversed (first vertex nearer the `to` node) | 216 | 0 |
+| worst slice-end-to-node distance | **271 km** | 0.44 km |
+| length error vs `length_km` (A1, ≤1%) | max 1e-5 — **passed** | max 1e-5 |
+
+The A1 acceptance test from the roadmap could not see it: a slice's length is
+`|Δmeasure|` regardless of which end of the spine it is cut from. Only a test that
+compares the slice's **endpoints to the node coordinates** can, and `E-402` has
+one. Direct measurement of the orientation rule (2,134 corridors with placements):
+every `as_built` corridor places stations on the stored line at `m`, every
+`reversed_to_a` corridor at `L − m`, with **zero exceptions in either direction**.
+
+This is the kind of defect a map shows instantly and a metric never does — the
+reason geometry needs its own audit rather than inheriting the length audit.
+
+## F-048 — The 17 small components are not isolated lines by distance, and `D-020`'s "not a data gap" was unsupported
+
+`D-020` retained the 17 non-giant components (37 nodes) and asserted they were
+"not a data gap", while its own next paragraph said to *investigate* whether they
+were real isolated branch lines or residual gaps. `E-403` investigated.
+
+| measure | small components | reference |
+|---|---|---|
+| nodes / route km | 37 (36 junctions, 1 station) / **501.5 km (0.69%)** | |
+| distance to nearest giant node | median **1.93 km**, max 14.96 | ordinary giant node → nearest other node: median 4.73, p95 10.40 |
+| within 1 / 2 / 5 / 10 km of the giant | 6 / 9 / 14 / 16 | **16 of 17 within the ordinary p95** |
+| at the *same coordinate* as a giant node | **5** | |
+| corridor has declared > found stations (`G-01`) | **17 of 17** | 58.5% of all corridors |
+
+The small components sit *closer* to the giant than an ordinary node sits to its
+nearest neighbour, five are co-located with a giant node, and all 17 lie on
+corridors with the `G-01` station-matching deficit. That is the signature of
+**residual connection gaps**, not of isolated lines. It is not proof: 58.5% of all
+corridors have a deficit, so that column alone is weak; the distance evidence is
+the stronger one. One component (`BHANUPLI`, 14.96 km) lies beyond the ordinary
+range and may be genuinely separate.
+
+Nothing is changed in the topology (`D-041`): the candidate links are *listed*
+(`E-403/small_components.csv`), not made. Making them is a human-audit decision.
+
+## F-049 — All 115 dissolvable junctions sit on a corridor boundary; three change gauge
+
+`D-017` kept the 115 degree-2 junctions because dissolving destroys 22 cycles.
+`E-403` adds what each one *is*: every one of the 115 is an operational junction
+at degree 2 (95 `station_like`, 16 `cabin`, 2 `block_hut`, 1 `yard`, 1 `goods`),
+and **none** has both incident edges on the same corridor — each is the stitch
+point where two corridors meet. Dissolving would therefore merge edges across a
+corridor boundary and lose the corridor-level attributes (`D-027`). **3 of 115
+change gauge** (contracting those would merge broad- and another gauge into one
+edge), and **20 contract onto an already-adjacent pair** (agreeing with `D-017`'s
+count). The original decision stands, now with the reason attached.
+
+## F-050 — Phase 2 stage `s09` reproduces byte-for-byte, and its QA report mislabelled two numbers
+
+Re-running `s09_graph_dataset.py` in a scratch copy of the repo reproduces **all
+eight data/doc files byte-identically** (`nodes`, `edges`, `corridors`,
+`service_edges`, `station_sequences`, `stations`, `README`, `VERIFICATION`) — the
+first direct evidence that the shipped dataset is regenerable, not only
+internally consistent. The one difference was intended: `QA_REPORT.txt` printed
+"degree 1 (line ends): 313" and "degree ≥3: 46" beneath the all-node line "nodes
+with coordinates", but the code counted **operational junctions only**. Whole-graph
+figures are **435** and **1,128**. Corrected at source (`s09`), which now prints
+both; no other document was wrong, since each cites the figures as junction counts.
+
+
+## F-051 — G-01 is not a matching failure: the "missing" stations are in no in-repo source
+
+`G-01` (42.9% of declared corridor–station incidences unmatched) was described as a
+Phase 2 station-matching recall problem. Measured against every in-repo station
+source (`E-500` evidence, `graph_v1_2/VALIDATION_v1_2.md` §1.1):
+
+- **0** unplaced master stations lie within 1.5 km of any deficit corridor's spine;
+- **116** (1.1% of the 10,027 deficit) lie within 1.5 km of the corridor's raw
+  segments — 111 of them on 60 corridors whose *spine* is broken, which is why the
+  spine test could not see them;
+- **0** of the 75 off-graph master stations with coordinates lie on trusted track;
+  292 master stations have no coordinate;
+- a timetable shows a train stopping at an on-corridor station between a suspect
+  edge's endpoints for **11 of 764** suspect edges.
+
+The deficit is stations the GIS counts and the timetable-derived master does not
+contain. Matching cannot recover what is not in the inputs. Composition of the
+suspect km: 30.8% along-track (`spine`), 64.7% `stitch_as_built`, 4.5% chord fallback.
+
+## F-052 — Stitching created 51 straight-line duplicates of routes already in the graph
+
+Stitching joins a corridor's named ends when nothing better exists, including when
+the corridor's own station chain already joins them (17), or when the corridor has
+less than half the edge's length in digitised track (34). `MYS–YPR` is the clearest
+case: 125.6 km on a 1.36 km corridor, duplicating a 24-hop, 140.8 km real route.
+Removed in v1.2 under a two-condition rule (`D-043`). Proof: connectivity unchanged;
+cycle rank falls by exactly 51; an equivalent route exists for every removal; **32
+of 39** edges with trains between their endpoints have trains stopping along the
+retained route, **0** contradict; the removal set is nested across thresholds
+(35–62). Effect: route km −1.73%, bridges +48 (track that only *looked* redundant),
+mean path +0.6%. All 8 paper conclusions stay in band (`E-501`).
+
+## F-053 — The source stores speed, gauge and track count per corridor; bridges, tunnels and zone vary
+
+Within a corridor, segments disagree on only 0.04–0.52% of network km for speed,
+gauge, tracks, zone and tunnel, but on 2.80% for bridges (1,909 corridors). Clipping
+each segment to each edge (`D-044`) reproduces edge length on **99.9%** of
+trusted-spine edges within ±10%. It changes bridge presence 9,308 → 7,921 edges
+(+ `bridge_km`), tunnels 663 → 179, zone on 55 edges, tracks 47, speed 4, gauge 2.
+For speed, gauge and tracks the corridor value is the finest the source holds.
+
+## F-054 — The 50 km/h fallback was off by 56 km/h on average; the replacement by 11.4
+
+Grouped-by-corridor CV: constant 50 MAE 56.2 km/h; gauge × zone median 11.4 (89%
+within ±20, bias +0.1). Observed run speed predicts declared speed poorly (MAE 23.1)
+and does not improve the median when added (11.6). Missing speeds are **not missing
+at random** — such edges run 5.4 km/h slower (median, within stratum) in observed
+service — so the imputation likely overstates them by an amount that could not be
+measured. No declared speed was added: 3,427 edges (35.4%) still have none.
+
+## F-055 — The station master's `state` predates Telangana
+
+Hyderabad, Warangal and Nizamabad carry "Andhra Pradesh". The 27 state values
+include no Telangana, Arunachal Pradesh, Manipur, Meghalaya or Sikkim. Any
+inference propagates this, so every AP label (388) is flagged ambiguous. 7-NN with
+unanimity and a 25 km cap is 99.52% accurate in leave-one-out and raises coverage
+45.8% → 74.6%.
+
+## F-056 — The service layer carries direction and time; capacity and running days exist nowhere
+
+From 416,970 stop records (5,208 trains): 19,865 directed consecutive-stop pairs —
+9,672 station pairs served both ways, 521 one way only — with run-time quantiles per
+direction and departures by hour. The undirected collapse reproduces Phase 2's
+service table exactly (10,193 pairs, 0 extra, 0 missing; train counts agree 98.0%;
+run-time median Δ 0.5 min). No input records days of operation or any capacity
+quantity.
+
+
+---
+
+## F-057 — Timetable distances cover 72% of edges and agree across sources
+
+data.gov.in timetables (2017: 11,113 trains; 2015: 2,810) give an official distance for 6,936
+of 9,638 edges. Same pair, different source: within 2 km in 94.4% (2015 vs 2017) and 96.3%
+(2017 vs IIT KGP 2024). 313 official distances are shorter than the straight line and 602 imply
+a longer route than the edge (D-049).
+
+## F-058 — Honest lengths improve edges and routes in the open variant
+
+Edges within max(1 km, 5%) of IIT KGP 2024: v1.2 76.4% → open 82.5% / full 82.2%. 2017
+hold-out trains, median abs route error: 2.09% → 1.80% / 2.02%; within 2%: 47.8% → 54.3% /
+49.8%. datameet trains: 1.85% → 1.84% / 2.21%. The signed route error flips from −1.4% to
++1.3%: v1.2's impossibly short edges masked detours forced by missing lines.
+
+## F-059 — OSM routed lengths overshoot official distances
+
+On 4,992 edges with an official distance the OSM shortest path is within max(1 km, 5%) for
+82.4% (our v1.2 length 75.0%, straight line 72.0%), but runs ~1.5% long at the median and much
+longer when it misses. Summed over train routes this costs accuracy in every tested rule (D-050).
+
+## F-060 — 28 station nodes carry the wrong code, not the wrong place
+
+Their OSM and Wikidata positions agree with each other but lie >10 km (up to 1,621 km) from the
+graph node, and moving the node would break its links. The graph matched a nearby station to the
+wrong code (`audit/01`).
+
+## F-061 — OSM makes the network nearly connected
+
+Full variant: 18 → 3 components; 14 of 16 small components lie within 30 km of OSM track to the
+main network, five at the same point. 145 of 315 dead-end junctions have an OSM branch within
+300 m: the branch line is missing from the GIS source.
+
+## F-062 — 488 missing stations sit on existing edges
+
+Of 1,618 OSM station codes absent from v1.2, 488 pass routing validation for insertion into 337
+edges (156 of them suspect-long). Trains stopping at inserted stations show larger route errors
+(median abs 5.4% vs 4.2% in open, 69 trains), so a minority are on the wrong line.
+
+## F-063 — OSM speed limits are accurate but sparse
+
+OSM `maxspeed` matches declared speeds with MAE 5.5 km/h (449 edges) but covers 7.6% of
+main-line km, replacing only 50 estimated speeds. Speeds from the fastest timetabled train are
+worse than the current imputation (MAE 24.1 vs 11.4 km/h).
+
+
+## F-064 — The paper's conclusions survive v1.3, some with narrow margins (E-601)
+
+All 8 banded conclusions stay within band for both variants against v1.0 and v1.2. Honest lengths
+move the distance-based ones: circuity median 1.258 → 1.300 (open, +3.4%; band 5%), mean path
+1,283 → 1,324 km (+3.2%; band 10%). The full variant's extra topology moves structure: bridge share
+0.164 (+1.85 pts vs v1.0, band 2), meshedness 0.0292 (0.0046 vs v1.0, band 0.005), top-50 corridor
+overlap exactly 0.80 (minimum 0.80). Results that sit at the edge of their band should be reported
+with the band.
+
+## F-021 — 11.9% of sections have no alternative route, concentrated in 283 corridors
+
+From E-709 on graph v1.4. Two corridors sever more than 200 stations; the worst (SC0077,
+Barsoi Jn–Makuria–Radhikapur, 10 sections, 58.7 km) isolates all 327 Northeast-state
+stations in the graph plus North Bengal. 5.6% of daily service-pair movements cross a
+section with no alternative and can only be cancelled, not diverted. Among the busiest
+100 sections, 90 would force a detour over 3x and the median detour is 291 km — the
+busiest trunk is not redundant.
+
+Verified retrodictively against the July 2025 Lumding–Badarpur landslide (predicted and
+observed severed sets match) and the August 2025 J&K floods.
+
+## F-022 — the damaging duplicate-node class is renames, not proximity
+
+E-705's 82 same-place pairs cost the severance analysis only 5 of 1,236 bridges. The
+damaging class was old-name/new-name station pairs the proximity rule never looked for —
+Allahabad Jn / Prayagraj Junction, Vishakapatnam / Waltair, Cheoki / Prayagraj Chheoki,
+Daraganj / Prayagraj Sangam. Detected by structural signature: a bridge under 1 km that
+severs exactly one station. 82 such found; `E-709/out/intra_station_artifacts.csv` is the
+correct input to any future merge, and supersedes the proximity-based queue for that purpose.
+
+## F-023 — A published caveat had drifted from its own measurement
+
+The release told users that 25.9% of route km is a straight-line lower bound. Measured on
+the shipped edges it is **25.3%** (km-weighted); the edge-count share is 21.4%. The figure
+was carried over from v1.3 and never recomputed after G5 and G6 changed the edge set.
+
+Small in magnitude, but it is a number a reviewer can check in one line, and it was wrong
+in the dataset's own headline caveat. Found by the first run of the new test suite (D-056),
+which now asserts the caveat string against the measured value.
+
+## F-024 — the degree-distribution claim was right in conclusion, wrong as stated
+
+E-710. The caption asserted an exponential tail. Over the full support the exponential
+beats a power law decisively (Vuong z = 164.4) but **does not fit** — predicting 4,054
+degree-1 nodes against 394 observed, chi-square 15,809 on 5 dof. The distribution is a
+spike at degree 2 (81.6% intermediate stops, 4.3% termini, 14.0% junctions), which the
+space-of-stations representation forces; fitting a smooth law to it is a category error.
+
+**The defensible claim:** among junctions (k >= 3) the distribution is exponential and
+fits well — lambda = 1.270, chi-square 2.63 on 3 dof, **p = 0.45, not rejectable** — and a
+power law on the same support is rejected (chi-square 25.41; Vuong z = 3.81, p = 1.4e-4).
+Kurant & Thiran's prediction holds where it has content: the branching structure.
+Scale-free is impossible regardless, since max degree is 7 (Barthelemy's bounded degree).
+
+## F-025 — two E-709 conclusions do not survive their own construction choices
+
+E-711, twelve cells over release (v1_3/v1_4), duplicate contraction and the intra-station
+threshold.
+
+**Robust.** The Lumding-Badarpur corridor severs **84 stations in all twelve cells** - it
+does not move by one station across twelve ways of building and classifying the graph.
+The worst corridor severs 455-459; the Northeast count 326-327; junction cut points
+372-385. The headline domain findings are identical before and after five modules of repair.
+
+**Conditional.** "283 severance corridors" holds only at a 1 km threshold; the range is
+258-306 over 0.5-2 km. Report the number with its condition.
+
+**Withdrawn as point figures.** The share of sections with no alternative route ranges
+11.4%-14.9% (26.5% of the median), driven by the repairs themselves (v1.3 0.1439 -> v1.4
+0.1191). State it directionally instead. And "82 intra-station artifacts" is a parameter
+output, not a measurement: 33-126 by threshold. What is robust is that the class exists and
+contains the four high-traffic renames, all of which are under 0.5 km and sever exactly one
+station, so all four are caught at every threshold tested.
+
+## F-026 — the release passes its gates and still carries four closure defects
+
+E-713. A stale `degree` column (255 nodes), 129 attribute-less repair sections (1,578.6 km),
+90 geometrically impossible sections caused by misplaced endpoint coordinates (worst 169 km),
+and an override trail with no reviewer on any of its 179 rows. The gates are regression
+thresholds set from v1.4's own measurements — G4 and G8 sit exactly at their limit, G1
+tolerates up to 120 impossible sections — so passing them never meant clean. The tests
+checked counts, schema and hashes, not derived-column consistency, attribute completeness or
+coordinate plausibility, which is where all three data defects sat.
+
+## F-027 — v1.4's route-accuracy figures are no longer an out-of-sample test
+
+Found while writing the consolidated technical reference (2026-10-19). E-703 and E-704 read
+`IRN_edges.csv`, the 2017 data.gov.in timetable and the IIT Kharagpur Sept 2024 routes to derive
+and judge their repairs; the E-708 gates G6, G7 and G8 then report accuracy against the same
+three sources. The improvement from 0.93% to 0.72% median route error was therefore selected
+on the data it is measured on. Release docs (`FITNESS.md`, `DATASHEET.md`) and earlier summaries
+describe the references as "never used in construction" — true for the topology built from
+geometry in v1.0, not for v1.4's repairs.
+
+Still out of sample: the D-049 hold-out (1.15x cap tuned on 700 trains, confirmed on a disjoint
+700, F-058) and the retrodictive disruption checks (Siliguri corridor; July 2025
+Lumding-Badarpur landslide), neither of which used disruption records.
+
+Fix for v1.4.1: split the 2024 trains, derive repairs on one half, report gates on the other;
+correct the wording in FITNESS and DATASHEET in the same release. Registered as I-28 in the
+closure audit.
+
+## F-028 — 69% of a timetable network's "direct lines" pass through intermediate stations
+
+E-714. IIT Kharagpur's IRN (RSTGCN, 2025) defines an edge as consecutive stops on any train.
+Of its 8,877 edges with both ends in graph v1.4, 30.7% are a single physical section; 69.3% pass
+through one or more stations on the track, 43.3% through three or more (median 4). This is the
+Kurant & Thiran shortcut problem, quantified for India, and the clearest single argument for a
+physical graph.
+
+## F-029 — the network is close to a tree, and fails like one
+
+E-714. Removing 2% of stations at random leaves 89.2% connected; 5% leaves 27.2%. Targeting the
+highest-degree stations, 5% leaves 5.4%. With 682 independent loops across 9,058 stations, most
+of the network is chains, which is why severance analysis is the product's core.
+
+## F-040 — OpenStreetMap has the stations we lack but not a usable network as drawn
+
+E-715. It holds 90.6% of our coded stations and 223 of the 228 absent from v1.4, and tags gauge
+and electrification on about 95% of mainline km. As drawn it is not a route network: 111,476 km
+of mainline against 69,439 official, because double and multiple track are separate ways; 510
+pieces; stations beside the track rather than on it (11.9% on). Its lengths match the timetable
+about as well as ours overall, and better exactly on our straight-line floor sections.
+
+## F-041 — OpenStreetMap stations sit beside the track, not off it
+
+E-716. E-715's "11.9% of stations on the track" counted only stations mapped as a node of a way.
+Measured as distance, 79.9% of coded stations are within 25 m of a running line and 94.6% within
+50 m. The stations OSM cannot place on Indian Railways track are almost all metro stations
+(362 of 444). Snapping is a small step, not the obstacle E-715 implied. The obstacle is the
+track: double line drawn as two ways, which roughly a third of the kept km collapses away.
+
+## F-042 — OSM's coded stations miss some of the busiest junctions
+
+E-716. 140 codes used in the September 2024 timetable have no coded OSM station node. They
+account for 3.5% of all 2024 stop events, and include Katpadi, Varanasi, Gudur, Khandwa,
+Coimbatore, Madurai, Mysuru and Madgaon. These stations are mapped in OSM as areas, which a
+node-only extract cannot hold. Wikidata (CC0) places 372 of the 457 such timetable codes, and
+shows 54 more are renamed codes of OSM stations.
+
+## F-043 — The stations OSM cannot connect are on lines that no longer run
+
+E-716. After evidence-based joining, 104 stations stay outside the main network; 102 of them had
+no train in September 2024. They are on suspended or closed narrow-gauge lines that OSM still
+tags as running track. Counted over served stations, the network is 99.96% connected.
+
+## F-044 — In OSM, through routes at junctions run over track tagged as yard or siding
+
+E-716 (C3). Filtering OSM to running lines by dropping `service=*` cut the main line at major
+junctions: Madhupur, Dindigul, Vriddhachalam and Manmad among them. Trains then routed hundreds of
+km round, and the 2024 route median error rose to 39%. The through route runs over crossovers and
+station tracks tagged `service=crossover` or `siding`. Restoring 731 such links, chosen on geometry
+alone, brings the error to 0.39%.
+
+## F-045 — The OSM graph, built without timetable distances, routes trains more accurately than v1.4
+
+E-716 (C3). 2024 route median error is 0.39% against 0.72%, and agreement with IIT Kharagpur
+distances is 93.5% against 82.7%. For v2.0 these are out of sample; for v1.4 they are in sample
+(F-027).
+
+## F-046 — The Siliguri finding holds for the network trains use, not for all track OSM maps
+
+E-716 (C3). On the served network the Barsoi–Makuria severance reproduces (overlap 0.989). On the
+whole graph it does not. OSM carries the new Araria–Thakurganj line, which gives the Northeast a
+second way in, but no train used it in September 2024. Severance results should be stated on the
+served network, with the date of the service data.
+
+## F-047 — The open 2017 timetable reaches more stations than the 2024 data; only 2024 gives frequency
+
+E-716 P2. On the same graph, the data.gov.in 2017 timetable (GODL) serves 8,050 stations against
+4,694 for IIT Kharagpur's 2024 routes. It includes passenger and local trains. Served sections
+agree at Jaccard 0.88, and trains per section rank-correlate at 0.93. The 2024 data alone gives
+trains per day and lines opened since 2018 (2,595 km served only in 2024).
+
+## F-048 — Junction areas make most of the OSM graph's extra cycles
+
+E-716 P2. 2,216 sections lie on cycles of 5 km or less, nearly all between junction points:
+triangles, crossovers, parallel lines in yards. One rule — track points within 1 km are one place —
+brings the cycle count to 496, below v1.4.1's 682. Applying it to the measured graph would cost
+route accuracy (median 0.39% → 0.97%), so it is a view, not an edit.
+
+## F-049 — v2.0 exposes shortcuts in v1.4
+
+E-716 P2. Seven stations are cut points in v2.0 but not in v1.4.1 only because v1.4.1 has a section
+far shorter than the track. Examples: Bellenahalli–Bahi 1.5 km where the track is 147 km;
+Cooch Behar–Dewanhat 0.1 km against 10.1 km; Howrah to BBD Bag across the Hooghly. They belong to
+v1.4's impossible-section class and go to the Tier 1 audit (V2-23).
+
+## F-050 — Independent spot-check of rc1 (2026-10-21)
+
+Checked the release package against things not used to build it: 32 well-known stations (name and
+state), 13 real trains' own 2017 timetable distances, and scans for faults the gates miss.
+`tests/test_v2_spotcheck.py` repeats it.
+
+- **Stations:** all 32 right. Kalka sits in Haryana, which is correct.
+- **Trains:** along their own stops the graph is within 1.5% for 12 of 13 and -2.8% for the Deccan Queen.
+  Examples: Rajdhani Howrah–Delhi +0.1%, Coromandel +0.2%, Gurudev +0.0%, Karnataka Express +1.3%.
+- **Shortest paths that look wrong but are not:** Chennai–Thiruvananthapuram 804 km (my quoted 921 is the
+  Palakkad route; train 16127 Egmore–Thiruvananthapuram runs 793 against the graph's 792.6); Secunderabad–Vijayawada
+  314 (train 12704 runs 314); Delhi–Jaipur 291 (the real Rewari–Narnaul–Ringas–Chomu route; the 308 km is the Alwar
+  route); Delhi–Lucknow 491 (train 12204 runs 492).
+- **Real small shortfall:** Mumbai CSMT–Karjat 4 km short (95 against 99); the CSMT–Pune total is 2.6% short.
+  Inside the normal error (median 1%), not fixed.
+- **Scans:** no duplicate codes, none outside India, no missing coordinates; the five sections more than 3x their
+  straight line are the Darjeeling and Kalka–Shimla spirals and a tunnel loop; 15 of 9,507 stations have no name.

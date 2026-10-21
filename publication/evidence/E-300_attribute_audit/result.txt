@@ -1,0 +1,149 @@
+==============================================================================
+E-300  attribute provenance and enrichment audit
+==============================================================================
+
+[1] ATTRIBUTE GRANULARITY -- is the value observed per segment, or is it a corridor constant?
+   attribute  corridors_constant_pct  mean_distinct_values_per_corridor granularity
+       speed                   96.62                              1.035    corridor
+        type                   99.09                              1.009    corridor
+noofstations                   98.87                              1.011    corridor
+ tracklength                   97.44                              1.026    corridor
+ railwayzone                   96.62                              1.034    corridor
+   nooflanes                   97.09                              1.030    corridor
+   bridge_yn                   16.92                              1.831     segment
+   tunnel_yn                   96.23                              1.038    corridor
+
+    119,446 GIS segments carry only 2,305 distinct corridor-level values for the 'corridor' rows above.
+    effective sample size for those attributes is 2,305, not 119,446.
+
+[2] LENGTH -- shipped haversine chord vs recoverable along-track distance
+    pairs analysed            9,247
+    total chord km               57,961.6   <- what the graph ships
+    total along-track km         59,628.7   <- recoverable from measure_km
+    understatement                1,667.1 km (2.88%)
+
+    distribution of (along-track / chord):
+      p5    0.5290
+      p25   0.9999
+      p50   1.0052
+      p75   1.0317
+      p90   1.0877
+      p95   1.1557
+      p99   1.4841
+      max  13.0521
+
+    share of pairs understated by more than:
+          2%  3,044 pairs  (32.92%)
+          5%  1,634 pairs  (17.67%)
+         10%    797 pairs  ( 8.62%)
+         25%    241 pairs  ( 2.61%)
+         50%     88 pairs  ( 0.95%)
+        100%     26 pairs  ( 0.28%)
+
+    BUT: 1,192 pairs (12.89%) report an along-track
+    distance SHORTER than the straight line, which is geometrically impossible.
+    Cause -- stations far from the spine project onto the same spine position:
+                    pairs  impossible_pct  median_ratio
+max_offset_km_band                                     
+<0.1                 7158             1.8        1.0089
+0.1-0.25              456            11.2        1.0036
+0.25-0.5              375            36.3        0.9787
+0.5-1.0               660            58.6        0.9238
+1.0-1.5               598            81.8        0.6436
+
+    on the trustworthy subset (offset <0.25 km, ratio >=0.95): 7,434 pairs (80.4%)
+    understatement there is 4.20%
+
+[3] SINUOSITY -- does the along-track measure recover real terrain?
+    corridors ranked: 871 (>=3 trustworthy pairs each)
+
+    top 12 by sinuosity:
+ rank        corridor_a              corridor_b        gauge zone  pairs  sinuosity
+    1          Matheran             Neral Jn NG Narrow Gauge   CR    4.0   2.652553
+    2        Darjeeling New Jalpaiguri Junction Narrow Gauge  NFR    9.0   2.007277
+    3             Kalka                  Shimla Narrow Gauge   NR   17.0   1.875102
+    4             Padua       Shrungavarapukota  Broad Gauge ECoR   11.0   1.688238
+    5          Barkhera                   Budni  Broad Gauge  WCR    3.0   1.643180
+    6      Mettupalayam           Udagamandalam  Metre Gauge   SR    6.0   1.508549
+    7          Baramula              Jammu Tawi  Broad Gauge   NR    7.0   1.475390
+    8       Castle Rock                   Kulem  Broad Gauge  SWR    3.0   1.444519
+    9            Jaroli     Pada Pahar Junction  Broad Gauge  SER    5.0   1.371959
+   10 Boridand Junction               Chirimiri  Broad Gauge SECR    3.0   1.349501
+   11           Lonavla              Palasdhari  Broad Gauge   CR    3.0   1.330787
+   12         Dantewara               Jagdalpur  Broad Gauge ECoR   10.0   1.318014
+
+    EXTERNAL CHECK -- India's recognised mountain railways.
+    The pipeline has no terrain, elevation or heritage input whatsoever.
+      rank    2 / 871   sinuosity 2.007   Darjeeling Himalayan (UNESCO 1999)
+      rank    6 / 871   sinuosity 1.509   Nilgiri Mountain (UNESCO 2005)
+      rank    3 / 871   sinuosity 1.875   Kalka-Shimla (UNESCO 2008)
+      rank    1 / 871   sinuosity 2.653   Matheran Hill (UNESCO tentative)
+
+    all 4 recovered mountain railways fall in the top 6 of 871 corridors (top 0.7%).
+
+[4] BRIDGES -- is the segment-level bridge flag a usable inventory?
+    segments flagged as bridge: 57,388 (48.05%)
+    median length of a bridge segment         22.7 m
+    median length of a non-bridge segment    686.4 m
+    -> the GIS splits its polylines AT the structures; flagged segments
+       are the bridge decks themselves, so a per-edge COUNT and a
+       bridged-metres total are both derivable. Far richer than a boolean.
+
+    VALIDATION against Rajya Sabha Q.371 (official bridge count per zone):
+         official_bridges  gis_bridge_segments  capture_rate
+Railway                                                     
+NR                  21319               3133.0        0.1470
+SCR                 17956               6983.0        0.3889
+SR                  17702               3867.0        0.2184
+ECoR                12851               3147.0        0.2449
+WR                  10534               6721.0        0.6380
+CR                  10004               2892.0        0.2891
+SWR                  9863               4088.0        0.4145
+SER                  8193               2269.0        0.2769
+WCR                  8134               3327.0        0.4090
+ECR                  7968               3029.0        0.3801
+NWR                  7906               3822.0        0.4834
+NFR                  7804                 47.0        0.0060
+NCR                  7081               2913.0        0.4114
+SECR                 5897               2156.0        0.3656
+ER                   5675               1630.0        0.2872
+NER                  4923               1787.0        0.3630
+
+    overall capture rate 0.316  (GIS 51,811 vs official 163,810)
+    Spearman 0.703   Pearson 0.499
+    capture rate range 0.006 (NFR) to 0.638 (WR)
+    -> VERDICT: the flag is real but the inventory is INCOMPLETE and the
+       shortfall is strongly zone-dependent. Usable as a relative, within-zone
+       density; NOT usable as an absolute count or for cross-zone comparison.
+
+[5] COVERAGE AND CONFLICT -- what is missing, and what was silently arbitrated
+
+    edge attribute nullity (shipped graph):
+      length_km        100.00%
+      gauge_code        99.99%
+      n_tracks          99.38%
+      speed_kmph        64.38%  <- fabricated for the rest by the 50 km/h fallback
+      service_load     100.00%
+
+    node attribute nullity (shipped graph):
+      longitude         99.99%
+      zone_code         98.92%
+      state             45.77%  <- blocks any state-level accessibility analysis
+
+      state on station nodes now           48.29%
+      state obtainable from station master  48.29%
+      -> the master has no more than the graph does. State is NOT recoverable
+         from in-repo sources; it needs reverse geocoding from the coordinates,
+         which are 100% present.
+
+    corridor attribute conflicts already detected in Phase 2:
+      speed_kmph_conflict         14 corridors ( 0.61%)
+      gauge_conflict              11 corridors ( 0.48%)
+      no_of_lanes_conflict        65 corridors ( 2.85%)
+      railway_zone_conflict       59 corridors ( 2.59%)
+      any_attribute_conflict     200 corridors ( 8.78%)
+      -> these flags exist on corridors.csv and were NEVER propagated to the
+         edge table. An edge on a conflicted corridor carries an arbitrated
+         value with no marker that arbitration occurred.
+
+wrote report.json, granularity.csv, length_pairs.csv, length_offset_bands.csv, corridor_sinuosity.csv, bridge_validation.csv

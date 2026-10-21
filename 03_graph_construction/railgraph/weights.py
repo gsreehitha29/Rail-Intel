@@ -41,7 +41,12 @@ def _travel_time_proxy(_u, _v, d) -> float:
     measurement. For genuinely time-weighted work prefer the service layer's
     runtime_min_median (service_edges.csv), which is observed.
     """
-    v = d.get("speed_kmph")
+    # v1.1+ carry `speed_used_kmph` with its provenance in `speed_source` /
+    # `speed_is_fallback`; v1.2 fills it with a validated imputation instead of
+    # the constant (D-044). v1.0 has only `speed_kmph`.
+    v = d.get("speed_used_kmph", d.get("speed_kmph"))
+    if v is None or (isinstance(v, float) and np.isnan(v)) or v <= 0:
+        v = d.get("speed_kmph")
     if v is None or (isinstance(v, float) and np.isnan(v)) or v <= 0:
         v = FALLBACK_SPEED_KMPH
     return float(d["length_km"]) / float(v) * 60.0

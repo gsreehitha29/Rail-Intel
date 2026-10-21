@@ -1,0 +1,1 @@
+Junction stitching damps the placement-tolerance sensitivity of connectivity by 322×, of distance and fragility by 25–30×, but of cycle structure by only 1.3×. The operator stabilises some conclusions and barely helps others, so the claim has to be made per measure (F-023).

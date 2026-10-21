@@ -418,7 +418,7 @@ def _gauge_constrain(G: nx.Graph) -> nx.Graph:
 
 _NODE_ATTRS = ("node_type", "station_code", "node_name", "longitude", "latitude",
                "zone_code", "zone_name", "zone_source", "state", "in_scope",
-               "junction_class", "match_confidence", "spatial_gap_km",
+               "junction_class", "match_confidence", "match_method", "spatial_gap_km",
                "n_corridors", "coordinate_shared", "is_dissolvable")
 _EDGE_ATTRS = ("edge_id", "length_km", "corridor_id", "gauge_code", "gauge_name",
                "zone_code", "zone_name", "speed_kmph", "n_tracks",
@@ -426,7 +426,19 @@ _EDGE_ATTRS = ("edge_id", "length_km", "corridor_id", "gauge_code", "gauge_name"
                "parallel_differs", "is_colocated", "length_below_floor",
                "is_short_edge", "any_stitch", "reconstruction_status",
                "attr_complete", "recon_clean", "core_v2", "core_v4",
-               "service_direct", "service_load")
+               "service_direct", "service_load",
+               # v1.1 provenance layer (additive; absent on a v1.0 table).
+               # These must reach the graph object: a hybrid length_km whose
+               # length_source did not survive export is exactly the failure
+               # v1.1 exists to prevent. Granularity markers are graph-level
+               # instead (constant per attribute) -- see provenance.GRANULARITY.
+               "length_km_v10", "length_km_v11", "length_chord_km",
+               "length_spine_km", "offset_max_km", "length_source", "sinuosity",
+               "station_match_deficit", "suspect_long_edge",
+               "speed_is_fallback", "speed_used_kmph",
+               "speed_kmph_conflict", "gauge_conflict", "no_of_lanes_conflict",
+               "railway_zone_conflict", "any_attribute_conflict",
+               "provenance_version")
 
 
 def to_graph(nodes: pd.DataFrame, edges: pd.DataFrame, spec: BuildSpec) -> nx.Graph:

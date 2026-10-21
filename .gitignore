@@ -106,3 +106,12 @@ logs/
 
 # graph-input pipeline cache (regenerable)
 **/pipeline/cache/
+
+# Archived prior dataset versions and superseded docs (kept on disk, out of git)
+_archive/
+
+# External raw datasets (2.0 GB open inputs kept on disk out of git per README)
+external_data/*
+!external_data/README.md
+!external_data/download_manifest.json
+

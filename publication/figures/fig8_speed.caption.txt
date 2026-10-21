@@ -1,0 +1,1 @@
+Speed implied by timetabled run-times on the 66.9% of edges where schedules give one, against the declared sectional speed the graph currently uses as a weight. The declared value is a sanctioned maximum and overstates achieved speed by about a factor of two; the flat fallback used where no declared speed exists is closer to reality than the declared value is.

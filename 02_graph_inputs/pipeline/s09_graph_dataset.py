@@ -402,8 +402,15 @@ def main():
         w(f"   {k:<32}: {v:,}")
     w(f"   of which dissolvable (deg 2)    : {int(nodes_df.is_dissolvable.sum()):,}")
     w(f"nodes with coordinates             : {int(nodes_df.longitude.notna().sum()):,}")
-    w(f"   of which degree 1 (line ends)   : {int((nodes_df.node_type.eq('operational_junction') & nodes_df.degree.eq(1)).sum()):,}")
-    w(f"   of which degree >=3 (load-bearing): {int((nodes_df.node_type.eq('operational_junction') & nodes_df.degree.ge(3)).sum()):,}")
+    # Both counts are reported for the WHOLE graph and for operational
+    # junctions alone. They were previously printed junction-only under a
+    # label that read as whole-graph ("of which" under "nodes with
+    # coordinates"): 313 / 46 read as 435 / 1,128 (found 2026-10-04).
+    _jn = nodes_df.node_type.eq('operational_junction')
+    w(f"   degree 1 (line ends), all nodes        : {int(nodes_df.degree.eq(1).sum()):,}")
+    w(f"      of which operational junctions      : {int((_jn & nodes_df.degree.eq(1)).sum()):,}")
+    w(f"   degree >=3 (branching), all nodes      : {int(nodes_df.degree.ge(3).sum()):,}")
+    w(f"      of which operational junctions      : {int((_jn & nodes_df.degree.ge(3)).sum()):,}")
     w(f"nodes with a zone                  : {int(nodes_df.zone_code.notna().sum()):,} "
       f"({int(nodes_df.zone_source.eq('station_master').sum()):,} stated, "
       f"{int(nodes_df.zone_source.eq('corridor_inferred').sum()):,} inferred from corridor)")

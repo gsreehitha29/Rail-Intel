@@ -13,10 +13,12 @@ from .build import (
     measure, assert_invariants, InvariantError, verify_rebuild_equivalence,
 )
 from . import weights
+from .provenance import ProvenanceSpec, enrich as enrich_v11, summarise as summarise_v11
 
 __all__ = [
     "BuildSpec", "SHIPPED_INVARIANTS", "DATASET_VERSION",
     "load_graph", "rebuild_tables", "shipped_tables", "to_graph",
     "measure", "assert_invariants", "InvariantError",
     "verify_rebuild_equivalence", "weights",
+    "ProvenanceSpec", "enrich_v11", "summarise_v11",
 ]

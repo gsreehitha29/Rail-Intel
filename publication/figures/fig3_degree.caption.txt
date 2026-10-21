@@ -1,0 +1,13 @@
+Degree distribution of the physical station graph (giant component, 9,058 nodes). The
+distribution is a spike at degree 2: 81.6% of stations are intermediate stops, 4.3% are
+termini and 14.0% are junctions. Mean degree 2.15, maximum 7. No single-family law
+describes the whole distribution, and a fitted exponential is rejected over the full
+support (chi-square 15,809 on 5 dof). Among junctions (k >= 3) the distribution IS
+exponential and cannot be rejected (lambda = 1.270; chi-square 2.63 on 3 dof, p = 0.45),
+while a power law over the same support is rejected (chi-square 25.41; Vuong z = 3.81,
+p = 1.4e-4). Kurant & Thiran's (2006) prediction for physical rail networks therefore
+holds for the branching structure. A scale-free distribution is impossible regardless:
+maximum degree 7 is the bounded-degree signature Barthelemy (2011) predicts for a
+spatially embedded network where every junction costs land and civil works. Prior
+Indian-railway studies report heavy tails because they measure service space, where
+degree counts trains rather than tracks. See E-710.

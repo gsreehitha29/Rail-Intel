@@ -1,0 +1,92 @@
+cff-version: 1.2.0
+title: >-
+  Indian Railway Network Station-Level Physical Graph (Rail-Intell graph v1.4)
+message: >-
+  If you use this dataset, please cite it. Read
+  graph_v1_4/FITNESS.md first: it states which conclusions this graph supports
+  and which it does not, and 25.3% of its route km is a lower bound rather than
+  a measurement. docs/STABILITY.md is the engineering contract.
+type: dataset
+version: "1.4"
+date-released: "2026-10-12"
+abstract: >-
+  A reproducible, validated station-level physical graph of the Indian railway
+  network: 9,095 nodes (stations and operational junctions) and 9,759 physical
+  track sections spanning 74,849.7 route km, with 99.59% of nodes in a single
+  connected component. Constructed from national railway GIS polylines by
+  corridor spine reconstruction, station projection and junction stitching, then
+  repaired against three independent references that were never used in
+  construction. Released as a gated, deterministic build with a content-hashed
+  manifest, a recorded decision trail of 179 evidence-carrying overrides, a
+  construction-choice sensitivity study, a stability contract with a regression
+  test suite, and a documented register of its own defects. Nine release gates
+  must pass for a build to ship; route lengths agree with the 2024 timetable to a
+  median 0.72%, with 95.69% of train routes within 5%.
+keywords:
+  - railway network
+  - Indian Railways
+  - spatial network
+  - network science
+  - infrastructure
+  - graph dataset
+  - reproducibility
+  - FAIR data
+authors:
+  - family-names: Vinjamuri
+    given-names: Bhuvanesh
+    email: vinjamuri.bhuvan@gmail.com
+    roles:
+      - Data engineering and provenance
+license-note: >-
+  Code is MIT and prose is CC BY 4.0 (see LICENSES.md). The dataset itself is not
+  yet licensable: it derives from a GIS source whose redistribution terms are
+  restrictive (publication/SOURCE_LICENCE_INVENTORY.md section 8), so the graph is
+  described and fully reproducible from the pipeline, with deposit pending a
+  rebuild from open inputs.
+identifiers:
+  - type: other
+    value: "spec_hash:f9adf8ca9042"
+    description: Build specification hash identifying this exact construction
+references:
+  - type: article
+    authors:
+      - family-names: Sen
+        given-names: Parongama
+    title: Small-world properties of the Indian railway network
+    year: 2003
+    journal: Physical Review E
+    volume: "67"
+    number: "3"
+    start: "036106"
+  - type: article
+    authors:
+      - family-names: Bhatia
+        given-names: Udit
+    title: >-
+      Network science based quantification of resilience demonstrated on the
+      Indian Railways Network
+    year: 2015
+    journal: PLOS ONE
+    volume: "10"
+    number: "11"
+  - type: article
+    authors:
+      - family-names: Kurant
+        given-names: Maciej
+      - family-names: Thiran
+        given-names: Patrick
+    title: Extraction and analysis of traffic and topologies of transportation networks
+    year: 2006
+    journal: Physical Review E
+    volume: "74"
+    number: "3"
+    start: "036114"
+  - type: article
+    authors:
+      - family-names: Gebru
+        given-names: Timnit
+    title: Datasheets for Datasets
+    year: 2021
+    journal: Communications of the ACM
+    volume: "64"
+    number: "12"

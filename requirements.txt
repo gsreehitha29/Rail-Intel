@@ -29,3 +29,10 @@ python-louvain==0.16
 infomap==2.8.0
 # plotting -- g06
 matplotlib==3.9.2
+# metrics -- community vs zone agreement (railgraph.metrics.community_vs_zone)
+scikit-learn==1.7.2
+
+# graph v1.3 (E-600) -- external data
+pyshp==3.1.6        # datameet state boundary shapefile
+osmium==4.3.1       # pyosmium: reading the Geofabrik .osm.pbf extracts
+# note: v1.3 was built with shapely 2.1.2; the APIs used (STRtree.query/nearest) are unchanged from 2.0.6

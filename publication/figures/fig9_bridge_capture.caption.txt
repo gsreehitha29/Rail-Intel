@@ -1,0 +1,1 @@
+The GIS records only 31.6% of officially counted railway bridges, and the shortfall is strongly zone-dependent — from 0.6% in Northeast Frontier Railway to 63.8% in Western Railway. A per-edge bridge count is therefore usable only as a relative density within a zone, never as an absolute count or across zones (F-030).

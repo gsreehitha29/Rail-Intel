@@ -19,9 +19,9 @@
 
 | | Claim | Evidence | Status |
 |---|---|---|---|
-| **C1** | Artifact: 9,095-node geolocated, infrastructure-attributed, provenance-carrying physical station graph with a derived service layer | E-101, E-102, E-106 | dataset shipped; validation pending |
-| **C2** | Method: reproducible GIS→corridor→chain→**junction-stitched** transformation, timetable retained as validation | E-103, E-105, F-001 | implemented; validation pending |
-| **C3** | Evaluation: cross-source validation + construction-choice sensitivity study | E-103, E-200, E-201 | pending |
+| **C1** | Artifact: 9,095-node geolocated, infrastructure-attributed, provenance-carrying physical station graph with a derived service layer | `E-001`, `E-007`, `E-100`, `E-101` | **v1.0 shipped and validated; v1.1 adds per-value provenance (`E-400`)** |
+| **C2** | Method: reproducible GIS→corridor→chain→**junction-stitched** transformation, timetable retained as validation | `E-002` (rebuild equivalence), `E-101` (cross-source), `E-300` (granularity, recall) | **implemented and validated; `G-01` recall is the stated weak point** |
+| **C3** | Evaluation: cross-source validation + construction-**and-derivation**-choice sensitivity study | `E-101`, `E-102`, `E-200`, `E-401` | **complete** — `E-401` closes the derivation gap `E-200` could not test |
 
 ---
 
@@ -29,16 +29,16 @@
 
 | § | Section | Content | Evidence | Figures |
 |---|---|---|---|---|
-| 1 | Introduction | The gap (`F-006`): prior IRN graphs are timetable-derived, order-of-magnitude smaller, externally unvalidatable | `LITERATURE.md` §1 | — |
+| 1 | Introduction | The gap, as **one** structural claim rather than three complaints: *the field has studied Indian Railways as a service system and never as a physical one.* The three usual deficiencies all follow from that single choice — a timetable graph must be smaller (it sees only served stations), must be externally unvalidatable (its source is its only reference), and must be attribute-free (a timetable records no track). Holds through `[RST25]` (2025) | `LITERATURE.md` §1, `F-006` | T1 |
 | 2 | Related work | `[SEN03, GHO, BHA15]` prior IRN; `[KUR06]` representations and the layered model; `[KAR16, BOE25]` construction/simplification; `[PAL26]` representation sensitivity; `[UIC16]` standards | `LITERATURE.md` | T1 prior-art comparison |
 | 3 | Data | 119,446 GIS segments, 8,990 stations, 416,970 stop records; vintages; what was cleaned and why | `DATA_DICTIONARY.md`, `GRAPH_INPUTS_DICTIONARY.md` | T2 source inventory |
 | 4 | Method | segments → corridors → spines → tiered matching → ordering → chains → **stitching** → enrichment. Meso–macro per `[UIC16]` | `GRAPH_HANDOFF_V2.md` §4, `DECISIONS.md` | F1 pipeline schematic; F2 Villupuram worked example |
 | 4.x | The stitching operator | The rail-specific failure mode and its resolution; 59.4% → 99.6% | D-005, E-000 | T3 build comparison |
 | 5 | The dataset | Node/edge schema, provenance columns, two views via flags | `graph_dataset/README.md` | T4 data dictionary; F3 national map |
-| 6 | Validation | V1 invariants · V2 theory (exponential degree per `[KUR06]`; route-km decomposition) · **V3 cross-source, stratified** · V4 prior-art reproduction · V5 stratified audit · V6 null models | E-101…E-106 | F4 degree distribution + fits; T5 cross-source by stratum; T6 Sen/Bhatia reproduction; F5 audit by stratum |
-| 7 | Sensitivity | One-at-a-time sweep; tolerance × stitching interaction; robust/conditional/artifact verdict per conclusion | E-200, E-201 | F6 tornado plot; F7 top-k overlap heatmap; T7 verdict table |
+| 6 | Validation | V1 invariants · V2 theory (exponential degree per `[KUR06]`; route-km decomposition) · **V3 cross-source, stratified** · V4 prior-art reproduction · V5 stratified audit · V6 null models | `E-001`, `E-002`, `E-100`, `E-101`, `E-102` | F4 degree distribution + fits; T5 cross-source by stratum; T6 Sen/Bhatia reproduction; F5 audit by stratum |
+| 7 | Sensitivity | One-at-a-time sweep; tolerance × stitching and tolerance × length_source interactions; robust/conditional/artifact verdict per conclusion | `E-200`, `E-401` | F6 tornado plot; F7 top-k overlap heatmap; T7 verdict table |
 | 8 | Discussion | What the graph supports and what it does not; implications for anyone constructing one | `LIMITATIONS.md` | — |
-| 9 | Limitations | Shortcutting bias, 49% speed coverage, 46% state coverage, inferred zones, 88 ambiguous coordinates, 40 rejected matches | `LIMITATIONS.md` | — |
+| 9 | Limitations | The v1.2 residual-gap register (`graph_v1_2/VALIDATION_v1_2.md` §7): stations absent from all inputs, 35.4% undeclared speeds (validated estimate, MNAR bias unquantified), 25.4% unlabelled states + AP/TG ambiguity, no capacity or running-days data, 56 unsupported edges | `VALIDATION_v1_2.md`, `LIMITATIONS.md` | — |
 | 10 | Availability | DOI deposit, GraphML + parquet + GeoJSON, datasheet, `make` reproduction | `graph_v1/` | — |
 
 ---
@@ -52,18 +52,18 @@ typed.** (The reason is `F-003`.)
 |---|---|---|
 | T1 | Prior-art comparison: size, source, representation, validation available | literature |
 | T2 | Source inventory with vintages | Phase 1 docs |
-| T3 | Build comparison: chains vs stitched × tolerance | E-000 / E-201 |
+| T3 | Build comparison: chains vs stitched × tolerance | `E-200` interaction grid |
 | T4 | Node and edge schema | `graph_dataset/README.md` |
-| T5 | Cross-source agreement **by stratum** | E-103 |
-| T6 | Sen / Bhatia reproduction vs our physical graph | E-104 |
-| T7 | Sensitivity verdict: robust / conditional / artifact | E-200 |
+| T5 | Cross-source agreement **by stratum** | `E-101` |
+| T6 | Sen / Bhatia reproduction vs our physical graph | deferred to `W4` (multi-layer); `E-104` superseded |
+| T7 | Sensitivity verdict over construction **and** derivation | `E-200` + `E-401` |
 | F1 | Pipeline schematic | hand-specified, script-rendered |
-| F2 | Villupuram worked example — five corridors, one stitch | E-000 |
+| F2 | Villupuram worked example — five corridors, one stitch | `E-200` / Phase 2 |
 | F3 | National graph, geographic layout | g06 |
-| F4 | Degree distribution with exponential and power-law fits | E-102 |
-| F5 | Audit agreement by stratum with CIs | E-105 |
-| F6 | Tornado plot: conclusion elasticity per construction choice | E-200 |
-| F7 | Top-k criticality overlap across sweep cells | E-200 |
+| F4 | Degree distribution with exponential and power-law fits | `E-101` (fig3) |
+| F5 | Audit agreement by stratum with CIs | `E-105` — **blocked, needs two raters** |
+| F6 | Tornado plot: conclusion elasticity per construction and derivation choice | `E-200` + `E-401` |
+| F7 | Top-k criticality overlap across sweep cells | `E-200` + `E-401` |
 
 ---
 

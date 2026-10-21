@@ -1,0 +1,1 @@
+The station-level physical graph of the Indian railway network, drawn at true coordinates. Edges are straight chords between endpoints, not track alignment (see Limitations). One node of 9,095 has no coordinate and is omitted.

@@ -1,211 +1,142 @@
-# Rail-Intell — Indian Railway Network Analysis
+# Rail-Intel — a station-level graph of the Indian railway network
 
-A data-engineering and graph-analysis project for the Indian Railway Network.
+A reproducible, geospatial and graph-based representation of Indian Railways, built from
+open data, and the corridor-vulnerability analysis built on it.
 
-## Project Overview
+**Current dataset: `v2.0-open`, locked 2026-10-21.** 12,301 nodes (9,507 stations,
+2,794 junctions), 13,560 track sections, 70,304.6 route km — **+1.25%** against the official
+69,439 km. Built only from OpenStreetMap, Wikidata, datameet and data.gov.in, and released
+under ODbL 1.0.
 
-This is a 7-month, 3-person capstone project building a validated, station-level
-graph of the Indian railway network: Bhuvanesh (data engineering & provenance —
-this repo's Phase 1–2 work), Sreehitha (graph engineering — Phase 3), Abrar
-(network intelligence / domain modules — Phase 4).
+> **Read [`docs/TIMELINE.md`](docs/TIMELINE.md) first.** It is the single history of the
+> project: every version, the decisions and design changes behind it, how each was validated,
+> its limitations, and an honest account of what is still wrong or unfinished.
 
-The repository is organized by project phase, in the order the work happens:
+---
+
+## Where things are
 
 ```
 Rail-Intell/
-├── 01_data_engineering/     ← Phase 1: raw data, cleaning, EDA (Bhuvanesh)
-├── 02_graph_inputs/         ← Phase 2: reproducible pipeline → validated graph-input package (Bhuvanesh)
-├── 03_graph_construction/   ← Phase 3: build the actual graph object (Sreehitha)
-├── 04_analysis_modules/     ← Phase 4: four downstream analysis modules (Abrar)
-├── docs/                    ← Cross-phase documentation and handoff briefings
-└── reference_data/          ← Reference-only source material (not part of the pipeline)
+├── docs/                      Registers and reference documentation
+├── external_data/             Open inputs (OSM, Wikidata, datameet, timetables) — 2.0 GB, not in git
+├── reference_data/            Published statistics used for validation
+├── 01_data_engineering/       Source cleaning, EDA, the legacy v1 junction graph
+├── 02_graph_inputs/           The graph-input pipeline and its validated dataset
+├── 03_graph_construction/     The graph builds, the release, and the service layers
+├── 04_analysis_modules/       Downstream analyses (E-7xx experiments)
+├── 05_product/                The corridor vulnerability tool — empty, to be built
+├── publication/               Figures, evidence and reports
+├── tests/                     82 tests, including the release contract
+└── _archive/                  Superseded versions and docs — on disk, out of git
 ```
 
-Each phase folder that doesn't yet have code has its own `README.md` pointing to
-what it depends on and where to start.
+### `03_graph_construction/` — the dataset itself
+
+| Path | What it is |
+|---|---|
+| `release/rail-intel-v2.0-open/` | **the final dataset**: `graph/`, `places/`, `service_2017/`, `provenance/`, datasheet, licence, manifest |
+| `release/rail-intel-v2.0-open.zip` | the deterministic release package (sha256 in `SHA256SUMS`) |
+| `graph_v2_0_open/` | the v2.0 working build and its validation evidence (`work/`) |
+| `graph_v1_4/` | the frozen Esri-derived baseline. **Never edit in place** (D-055) |
+| `graph_v1_4_1/` | the accuracy-comparison baseline for v2.0 |
+| `service_layer_v2_0_open/` | 2017 (shipped, GODL) and 2024 (local only, D-067) service layers |
+| `railgraph/` | the v1.x construction library |
+| `experiments/E-716_osm_v2_build/` | the v2.0-open pipeline: O1–O6, validation, release packaging |
+
+The dataset ships two views (D-066):
+
+- **`graph/`** — the physical graph. Lengths are exact. Use it for distance and routing.
+- **`places/`** — track points within 1 km merged into one place. Use it for structure:
+  degree, cut points, redundancy.
+
+### `05_product/` — the upcoming product
+
+Empty by design. The scope (D-058) is a corridor-level vulnerability and contingency tool
+answering: which corridors have no alternative route, what each isolates, how much traffic
+depends on it, and what a named blockage cuts off.
+
+- `05_product/api/` — a queryable interface over the locked graph
+- `05_product/web/` — the map and corridor views
+
+### `04_analysis_modules/`
+
+`E-700`–`E-714` are the v1.4-era analyses. `E-718`–`E-720` are empty placeholders for the
+re-runs of criticality, degree distribution and conclusion robustness on v2.0-open — **those
+analyses have not yet been re-run, so their published figures are v1.4 figures** (see
+`docs/TIMELINE.md` §5).
 
 ---
 
-## Phase 2 output: the current graph-ready hand-off
+## Documentation
 
-> **For the graph-design teammate:** read `02_graph_inputs/graph_dataset/README.md`,
-> then `docs/GRAPH_HANDOFF_V2.md` §4 for why the dataset is shaped the way it is.
-
-Phase 1 (EDA/preprocessing) and Phase 2 (the graph-input pipeline) are both
-complete and validated. Phase 2's output — the `graph_inputs/` package below —
-is the current hand-off point for Phase 3 graph construction.
-
-### Graph Dataset (the hand-off — build from this)
-
-`02_graph_inputs/graph_dataset/` is the cleaned, normalised, node- and
-edge-resolved dataset. Read its `README.md` first; it is the data dictionary.
-
-| File | Rows | Description |
-|------|------|-------------|
-| `02_graph_inputs/graph_dataset/nodes.csv` | 9,095 | **The node table** — 8,621 stations + 474 operational junctions, typed, attributed, with provenance |
-| `02_graph_inputs/graph_dataset/edges.csv` | 9,689 | **The edge table** — geodesic-weighted physical connections with gauge, tracks, zone, service load |
-| `02_graph_inputs/graph_dataset/service_edges.csv` | 10,193 | Service layer — frequency and observed run-time per station pair |
-| `02_graph_inputs/graph_dataset/stations.csv` | 8,990 | Cleaned station master |
-| `02_graph_inputs/graph_dataset/corridors.csv` | 2,279 | Cleaned corridor attributes |
-| `02_graph_inputs/graph_dataset/station_sequences.csv` | 12,305 | Ordered station placements — the input edges were built from |
-| `02_graph_inputs/graph_dataset/QA_REPORT.txt` | — | Regenerated every run |
-| `02_graph_inputs/graph_dataset/VERIFICATION.txt` | — | 27 integrity checks, re-derived from the shipped files every run |
-
-The graph: **9,095 nodes, 9,689 edges, 99.6% in one connected component,
-72,201 route km.** One canonical zone vocabulary across nodes and edges, full
-referential integrity, deterministic rebuild.
-
-### Intermediate package (Phase 2 working files)
-
-`02_graph_inputs/graph_inputs/` holds the 12 intermediate tables the dataset was
-built from — canonical junctions, corridor spines, station matches, placements.
-Keep them: they let edge construction be redone under different rules.
-
-| File | Rows | Description |
-|------|------|-------------|
-| `02_graph_inputs/graph_inputs/nodes_junctions.csv` | 2,029 | Canonical junctions: coordinates, class, station match + confidence |
-| `02_graph_inputs/graph_inputs/corridor_station_sequence.csv` | 12,305 | Stations ordered along each corridor, with geodesic distance-along-line |
-| `02_graph_inputs/graph_inputs/corridors_enriched.csv` | 2,279 | Corridor attributes, geodesic length, reconstruction status |
-| `02_graph_inputs/graph_inputs/QA_SUMMARY.txt` | — | Machine-generated integrity report |
-
-See `docs/GRAPH_INPUTS_DICTIONARY.md` for the full column dictionary of every
-file in the package, and `docs/VALIDATION_REPORT.md` for what was checked and
-which limitations are known (in particular: "spine shortcutting", affecting
-~17% of consecutive station pairs — documented, not hidden).
-
-### Phase 1 outputs (raw + cleaned data this pipeline is built on)
-
-#### Legacy graph (v1, superseded by the Phase 2 package above)
-
-| File | Rows | Description |
-|------|------|-------------|
-| `01_data_engineering/legacy_graph_v1/rail_edges_initial.csv` | 2,257 | Conceptual directed edges — one per unique junction pair |
-| `01_data_engineering/legacy_graph_v1/junction_nodes_initial.csv` | 2,024 | Junction nodes with degree statistics and component membership |
-| `01_data_engineering/legacy_graph_v1/railway_components_initial.csv` | 113 | Connected-component summary (main component: 1,758 nodes / 2,101 edges) |
-
-#### Station master
-
-| File | Rows | Description |
-|------|------|-------------|
-| `01_data_engineering/processed_data/cleaned_stations.csv` | 8,990 | Cleaned station master — 8,697 with coordinates, 0 duplicate codes |
-
-#### Service data (validated, not currently used as graph edges)
-
-| File | Rows | Description |
-|------|------|-------------|
-| `01_data_engineering/processed_data/cleaned_schedules.csv` | 416,970 | Stop records for 5,208 trains — validated against station master |
-| `01_data_engineering/processed_data/cleaned_trains.csv` | 5,208 | Train metadata with quality flags |
-
-### Documentation
-
-| File | Description |
-|------|-------------|
-| `CHANGELOG.md` | **What changed and when** — read this first if you have been away |
-| `02_graph_inputs/graph_dataset/README.md` | **The data dictionary** for the hand-off dataset |
-| `docs/GRAPH_HANDOFF_V2.md` | **Start here** — current handoff briefing for the graph-design phase |
-| `docs/GRAPH_INPUTS_DICTIONARY.md` | Column-level schema for the `02_graph_inputs/graph_inputs/` package |
-| `docs/VALIDATION_REPORT.md` | Independent validation of the preprocessing layer, gaps found, and how each was closed |
-| `docs/GRAPH_HANDOFF.md` | Superseded v1 handoff, kept for provenance (see banner at top) |
-| `docs/DATA_DICTIONARY.md` | Column-level schema for the Phase 1 processed datasets |
+| File | What it holds |
+|---|---|
+| `docs/TIMELINE.md` | **Start here.** Versions, decisions, design changes, validation, limitations, the bad side |
+| `docs/DECISIONS.md` | The decision register, D-001 … D-069, with the reasoning for each |
+| `docs/FINDINGS.md` | Every measured finding, F-… (note: some IDs are reused — see TIMELINE §5.8) |
+| `docs/EXPERIMENTS.md` | The experiment log, E-… |
+| `docs/V2_ISSUES.md` | The v2.0-open issue register, V2-01 … V2-25, with status |
+| `docs/SCOPE.md` | Objectives, deliverables and what is explicitly out of scope |
+| `docs/STABILITY.md` | What the release promises, and what the tests enforce |
+| `docs/DATA_DICTIONARY.md` | Column schema for the Phase 1 processed datasets |
+| `docs/GRAPH_INPUTS_DICTIONARY.md` | Column schema for `02_graph_inputs/graph_inputs/` |
+| `docs/GRAPH_HANDOFF_V2.md` | The graph-design handoff briefing |
+| `docs/PHASE3_GRAPH_ROADMAP.md` | The Phase 3 roadmap and its gates |
+| `docs/LITERATURE.md`, `docs/PAPER_OUTLINE.md` | Positioning and the paper's structure |
+| `02_graph_inputs/graph_dataset/README.md` | Data dictionary for the Phase 2 hand-off dataset |
 
 ---
 
-## Notebooks (Phase 1)
+## Running things
 
-Located in `01_data_engineering/notebooks/`. Each now starts with an added
-"path fix" cell (inserted during the 2026-09-29 reorg) that changes the
-working directory to `01_data_engineering/` before running, so every relative
-path inside — `railways-master/...`, `processed_data/...`, `Railway_Network_.*`
-— still resolves exactly as it did before the move.
-
-| Notebook | Purpose | Status |
-|----------|---------|--------|
-| `Railway_networks_EDA.ipynb` | EDA of `Railway_Network_.csv`; produces the legacy edge/node/component CSVs | Complete |
-| `01_Final_Data_Preprocessing_and_Validation.ipynb` | Cleans stations, trains, schedules; spatial analysis | Complete. Superseded (for graph-input purposes) by `02_graph_inputs/pipeline/`. |
-| `Untitled.ipynb` | Historical statistics EDA (gauge history, electrification) | Exploratory — no output files |
-
----
-
-## Repository Structure
-
-```
-Rail-Intell/
-├── 01_data_engineering/
-│   ├── Railway_Network_.csv          ← Raw GIS network (119,446 segments)
-│   ├── Railway_Network_.geojson      ← Raw GIS geometry (88 MB)
-│   ├── railways-master/              ← Raw source data (JSON)
-│   │   ├── stations.json
-│   │   ├── trains.json
-│   │   ├── schedules.json
-│   │   └── README.md
-│   ├── processed_data/
-│   │   ├── cleaned_stations.csv      ← Station master (8,990 stations)
-│   │   ├── cleaned_trains.csv        ← Train metadata (5,208 trains)
-│   │   └── cleaned_schedules.csv     ← Schedule stops (416,970 records)
-│   ├── notebooks/
-│   │   ├── 01_Final_Data_Preprocessing_and_Validation.ipynb
-│   │   ├── Railway_networks_EDA.ipynb
-│   │   └── Untitled.ipynb
-│   └── legacy_graph_v1/              ← Superseded v1 junction graph
-│       ├── rail_edges_initial.csv
-│       ├── junction_nodes_initial.csv
-│       └── railway_components_initial.csv
-│
-├── 02_graph_inputs/
-│   ├── pipeline/                     ← Reproducible pipeline (run_all.py, ~50s)
-│   │   ├── config.py                 ← Paths, controlled vocabularies, geodesy
-│   │   └── s01..s10_*.py             ← Ten deterministic stages
-│   ├── graph_dataset/                ← ★ BUILD FROM THIS — cleaned, normalised
-│   │   ├── README.md                 ← data dictionary; read first
-│   │   ├── nodes.csv                 ← 9,095 resolved graph nodes
-│   │   ├── edges.csv                 ← 9,689 weighted, attributed edges
-│   │   ├── service_edges.csv         ← frequency + run-time per station pair
-│   │   ├── stations.csv / corridors.csv / station_sequences.csv
-│   │   └── QA_REPORT.txt · VERIFICATION.txt
-│   └── graph_inputs/                 ← intermediate tables (12 files)
-│       ├── nodes_junctions.csv
-│       ├── corridor_station_sequence.csv
-│       ├── corridors_enriched.csv
-│       └── QA_SUMMARY.txt
-│
-├── 03_graph_construction/            ← Sreehitha's phase (empty — see its README.md)
-│
-├── 04_analysis_modules/              ← Abrar's phase (empty — each subfolder has a README.md)
-│   ├── 01_network_structure_criticality/
-│   ├── 02_accessibility_connectivity/
-│   ├── 03_resilience_redundancy/
-│   └── 04_expansion_whatif/
-│
-├── docs/
-│   ├── GRAPH_HANDOFF_V2.md           ← Graph teammate: read this first
-│   ├── GRAPH_INPUTS_DICTIONARY.md
-│   ├── VALIDATION_REPORT.md
-│   ├── GRAPH_HANDOFF.md              ← superseded v1
-│   └── DATA_DICTIONARY.md            ← Column schemas for Phase 1 datasets
-│
-├── reference_data/                   ← Reference-only material, not part of the pipeline
-│   ├── Indian_Railway_Stations_JSON-master/
-│   ├── archive (5)/
-│   └── (historical statistics PDFs/CSVs/xlsx)
-│
-├── .gitattributes
-├── .gitignore
-└── CLAUDE_COWORK_PROJECT_CONTEXT.md
+```bash
+pip install -r requirements.txt
+python -m pytest tests -q          # 82 tests
+make help                          # all build targets
 ```
 
+The v2.0-open build, in stages (laptop timings ≈ 82 s / 34 s / 29 s / 50 s):
+
+```bash
+make osm-c1        # filter, collapse parallel tracks, snap stations
+make osm-c2        # Wikidata placement, joins, the station graph, service
+make osm-c3        # validation against v1.4.1
+make osm-release   # the deterministic release package
+```
+
+The build is deterministic: the same inputs and code produce byte-identical outputs, verified
+across two machines. `manifest.json` lists every input with its hash.
+
 ---
 
-## Large Files
+## Licence and attribution
 
-The following files are too large for standard Git commits and are tracked via
-Git LFS (`.gitattributes` matches by extension: `*.geojson`, `*.json`, `*.csv`,
-`*.xlsx`, so this applies regardless of which folder a file lives in):
+The dataset is a derived database of OpenStreetMap, licensed **ODbL 1.0**, contents under
+**DbCL 1.0**. Sources: OpenStreetMap (ODbL), Wikidata (CC0), datameet maps (CC BY 4.0),
+data.gov.in Train Details 2017 (GODL-India). See `LICENSE`, `LICENSES.md` and the release's
+`ATTRIBUTION.md`.
 
-| File | Size | Note |
-|------|------|------|
-| `01_data_engineering/Railway_Network_.geojson` | ~88 MB | Required for spatial analysis |
-| `01_data_engineering/railways-master/schedules.json` | ~78 MB | Raw source |
-| `01_data_engineering/processed_data/cleaned_schedules.csv` | ~62 MB | Processed output |
-| `01_data_engineering/railways-master/trains.json` | ~14 MB | Raw source |
-| `01_data_engineering/processed_data/cleaned_trains.csv` | ~13 MB | Processed output |
-| `01_data_engineering/Railway_Network_.csv` | ~13 MB | Raw source |
+The 2024 timetable (IIT Kharagpur RSTGCN) has no stated licence and is **not redistributed**;
+it is used for validation only (D-067, D-068).
+
+`graph_v1_4` and everything derived from it are Esri-derived and **not redistributable**
+(D-057). That is why v2.0-open exists.
+
+---
+
+## Large files
+
+`.gitattributes` routes `*.geojson`, `*.json`, `*.csv` and `*.xlsx` through Git LFS by
+extension. The largest are `01_data_engineering/Railway_Network_.geojson` (~88 MB),
+`railways-master/schedules.json` (~78 MB) and `processed_data/cleaned_schedules.csv` (~62 MB).
+`external_data/` (2.0 GB) and `_archive/` are excluded from git entirely — `external_data/`
+is rebuilt from `external_data/download_manifest.json`.
+
+> **Note:** git-lfs is not installed in the current working copy, so `git status` fails there
+> and the last commit predates the v1.3 → v2.0 work. Treat `docs/TIMELINE.md` and the
+> registers as the authoritative history, not the git log.
+
+---
+
+*Project: Bhuvanesh Vinjamuri. Last restructured 2026-10-21.*

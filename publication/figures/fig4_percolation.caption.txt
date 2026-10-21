@@ -1,0 +1,1 @@
+State of critical functionality under progressive node removal. The ordering is inverted relative to the textbook scale-free result: random failure damages this network more than betweenness-targeted attack, because high-betweenness nodes lie contiguously along trunk routes rather than acting as separate hubs. Robust across 19 of 20 sensitivity cells (F-024).

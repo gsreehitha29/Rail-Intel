@@ -1,0 +1,1 @@
+Construction quality mapped. Red edges satisfy the F-026 defect signature: the corridor declares at least three more stations than were matched, and the edge spans more than 10 km, so one long edge is standing in for several missing stations. They carry 24.5% of total route km.

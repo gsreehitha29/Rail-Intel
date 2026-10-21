@@ -30,6 +30,7 @@ from . import config as C
 from . import metrics as M
 from .config import BuildSpec
 from .build import load_graph
+from .provenance import ProvenanceSpec, load_graph_v11
 
 #: Sample size for betweenness inside the sweep. Justified by E-100's
 #: convergence curve: k=1000 gives 98% top-50 overlap and Spearman 0.995
@@ -69,6 +70,44 @@ def one_at_a_time_cells() -> list[tuple[str, dict]]:
     ]
 
 
+def derivation_cells() -> list[tuple[str, dict, dict]]:
+    """W7 -- length *derivation* as a factor, which the sweep never varied.
+
+    E-200's Tier A "no artifacts" verdict was computed over construction and
+    representation parameters only, so it could not have detected G-01 or G-02
+    (stated in E-200's own limitations). `length_mode='asis'` reproduces the
+    v1.0 length and is the control that makes these cells comparable to the
+    existing grid.
+
+    Returned as (label, build_kw, provenance_kw) triples.
+    """
+    return [
+        ("length=asis", {}, {"length_mode": "asis"}),
+        ("length=hybrid", {}, {"length_mode": "hybrid"}),
+        ("length=spine", {}, {"length_mode": "spine"}),
+        ("length=chord", {}, {"length_mode": "chord"}),
+        # the offset gate inside the hybrid is itself a choice
+        ("length=hybrid_offset0.10", {}, {"length_mode": "hybrid",
+                                          "offset_trust_km": 0.10}),
+        ("length=hybrid_offset1.50", {}, {"length_mode": "hybrid",
+                                          "offset_trust_km": 1.50}),
+    ]
+
+
+def derivation_interaction_cells() -> list[tuple[str, dict, dict]]:
+    """tolerance x length_source -- the interaction D-026 names as required.
+
+    F-028 couples them: the placement offset decides both which stations are
+    placed at all and whether the spine measure between them is trustworthy.
+    """
+    out = []
+    for tol in (1.0, 2.0):
+        for mode in ("asis", "hybrid"):
+            out.append((f"tol{tol}_length{mode}", {"offset_max_km": tol},
+                        {"length_mode": mode}))
+    return out
+
+
 def interaction_cells() -> list[tuple[str, dict]]:
     """tolerance x stitching -- the interaction F-007 predicts."""
     out = []
@@ -100,15 +139,44 @@ def corridor_criticality(G: nx.Graph, weight: str = "length_km",
 
 def measure_cell(label: str, kw: dict, *, weight: str = "length_km",
                  bc_k: int = SWEEP_BC_K, ref_corridors: list | None = None,
-                 ref_nodes: list | None = None) -> dict:
-    """Full battery for one construction choice."""
+                 ref_nodes: list | None = None,
+                 prov_kw: dict | None = None) -> dict:
+    """Full battery for one construction choice.
+
+    `prov_kw` makes length derivation a factor (`W7`): when given, the v1.1
+    provenance layer is applied with those parameters before the graph is
+    built, and the cell's own tolerance governs spine eligibility.
+    """
     t0 = time.time()
     spec = BuildSpec(label=label, **kw)
-    G = load_graph(spec, strict=False)
+    if prov_kw is None:
+        G = load_graph(spec, strict=False)
+        prov = None
+    else:
+        prov = ProvenanceSpec(label=label, **prov_kw)
+        G = load_graph_v11(spec, prov, strict=False)
 
     row: dict = {"cell": label, "spec_hash": spec.hash, "weight": weight}
     row.update({k: v for k, v in spec.to_dict().items() if k != "label"})
+    row["length_mode"] = prov.length_mode if prov else "asis"
+    row["offset_trust_km"] = prov.offset_trust_km if prov else None
+    row["prov_hash"] = prov.hash if prov else None
+    row = measure_graph(G, row, weight=weight, bc_k=bc_k,
+                        ref_corridors=ref_corridors, ref_nodes=ref_nodes)
+    row["secs"] = round(time.time() - t0, 1)
+    return row
 
+
+def measure_graph(G: nx.Graph, row: dict | None = None, *, weight: str = "length_km",
+                  bc_k: int = SWEEP_BC_K, ref_corridors: list | None = None,
+                  ref_nodes: list | None = None) -> dict:
+    """The conclusion battery on an already-built graph.
+
+    Split out of `measure_cell` so a graph that no `BuildSpec` produces -- the
+    v1.2 repaired topology (`E-500`) -- is measured by exactly the same code as
+    every sweep cell, and its verdicts are comparable.
+    """
+    row = dict(row or {})
     cs = M.cut_structure(G)
     row.update({k: cs[k] for k in
                 ("n_nodes", "n_edges", "n_components", "giant_nodes",
@@ -146,9 +214,52 @@ def measure_cell(label: str, kw: dict, *, weight: str = "length_km",
     row.update({f"R_{k}": v for k, v in rs.items()})
     row["worst_strategy"] = min(rs, key=rs.get)
     row["random_worse_than_betweenness"] = rs["random"] < rs["betweenness"]
-
-    row["secs"] = round(time.time() - t0, 1)
     return row
+
+
+# --------------------------------------------------------------------------- #
+# tiers
+# --------------------------------------------------------------------------- #
+
+#: Which cells belong to which verdict tier. A single verdict over every cell is
+#: uninformative, because some cells deliberately negate a decided operator
+#: (`no_stitching` undoes `D-005`) and will of course break conclusions -- that
+#: is what justified the operator. The tiers separate "choices still genuinely
+#: open" from "choices already decided on evidence".
+#:
+#: Recorded here because `E-200` shipped `verdicts_tierA.csv` without any script
+#: that regenerates it, so the project's headline robustness claim was not
+#: reproducible by `make` (F-044). These definitions reproduce the published
+#: Tier A numbers exactly; `E-401` asserts that.
+TIER_A = (
+    # the nine genuinely open construction and representation choices
+    "default", "tolerance=1.0", "tolerance=2.0", "match_conf=high_only",
+    "parallel=mean", "dissolve_degree2", "prune_degree1", "merge_colocated",
+    "gauge_constrained",
+)
+#: Tier B adds the attributed-core views, which D-013 ships as flags precisely
+#: because filtering on them damages redundancy (bridge share +122%).
+TIER_B_ADDS = ("view=core_v2", "view=core_v4")
+#: Tier C adds the cells that negate a decided operator outright.
+TIER_C_ADDS = ("no_stitching", "node_model=station_only", "node_model=junction_only")
+
+
+def tier_cells(tier: str, extra: tuple[str, ...] = ()) -> tuple[str, ...]:
+    """Cell labels belonging to `tier` ('A', 'B' or 'C'), plus any extras."""
+    cells = TIER_A
+    if tier in ("B", "C"):
+        cells = cells + TIER_B_ADDS
+    if tier == "C":
+        cells = cells + TIER_C_ADDS
+    return cells + tuple(extra)
+
+
+def verdicts_for_tier(df: pd.DataFrame, tier: str,
+                      extra: tuple[str, ...] = ()) -> pd.DataFrame:
+    """Verdicts restricted to one tier's cells (plus `extra`, e.g. derivation cells)."""
+    keep = set(tier_cells(tier, extra))
+    sub = df[df.cell.astype(str).isin(keep)]
+    return verdicts(sub)
 
 
 # --------------------------------------------------------------------------- #

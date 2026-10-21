@@ -1,0 +1,1 @@
+Sensitivity verdicts by tier. Against the nine genuinely open construction and representation parameters (Tier A) no headline conclusion is an artifact. Adding the attributed-core views (Tier B, D-013) turns four of them into artifacts, which is why those views are shipped as flags rather than as a filtered export.

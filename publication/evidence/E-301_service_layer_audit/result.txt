@@ -1,0 +1,52 @@
+==============================================================================
+E-301  service-layer and enrichment-capacity audit
+==============================================================================
+
+[1] OBSERVED RUN-TIME -- coverage of the physical edge set
+    edges with an observed run-time   6,479 / 9,689 (66.9%)
+    route km covered                  62.7%
+    declared speed_kmph covers        64.4%
+    -> the measurement has BETTER coverage than the declaration it would replace.
+
+[2] OBSERVED vs DECLARED SPEED -- how wrong is the travel-time weight?
+    implied speed from observed run-time  median 53.5 km/h (p10 27.1, p90 73.6)
+    declared sectional speed, same edges  median 110.0 km/h
+    observed / declared                   median 0.513
+    -> the declared speed is a SANCTIONED MAXIMUM. Weighting travel time by it
+       understates journey time by roughly a factor of two.
+    -> note: the 50 km/h FALLBACK used on edges with no declared speed is
+       closer to reality (53.5) than the declared value is.
+       The invented constant outperforms the real attribute.
+
+[3] RUN-TIME VARIABILITY -- a congestion signal with no current counterpart
+    edges with a p10/p90 band        6,403
+    median spread                    4.0 min
+    p90 spread                       11.9 min
+    edges where p90 > 2x p10         28.8%
+    -> on nearly a third of edges the slowest trains take more than double the
+       fastest. That heterogeneity is invisible in a single scalar weight.
+
+[4] SERVICE COMPOSITION -- train class and accommodation
+    distinct train types: 16   trains: 5,208
+    Pass=2459  Exp=1288  SF=719  MEMU=297  Hyd=121  GR=52  Raj=48  Drnt=48
+    accommodation: first_ac=439  second_ac=1417  third_ac=1650  sleeper=1759  chair_car=403  first_class=167
+    -> an edge carrying 90% stopping passenger trains is functionally a different
+       link from one carrying Rajdhanis; the graph cannot currently say which.
+
+[5] DIRECTIONALITY -- is a directed graph buildable from in-repo data?
+    trains declaring a return_train   4,609 (88.5%)
+    of those, resolvable in master    99.2%
+    -> up/down pairing is available for the large majority of services, so a
+       directed service layer is buildable without any new data (D-033 revisit).
+
+[6] NODE ENRICHMENT -- dwell, terminus role, true geometry
+    schedule rows with arrival+departure  383,958
+    stations with >=5 dwell observations  6,589 (6,464 present in the graph = 75.0% of station nodes)
+    dwell minutes: median 0.0  p90 2.0
+    stations originating at least one train  723
+
+    corridor spine geometries available   2,278 corridors, mean 336 coordinates each
+    -> stored as WKB LineStrings. Slicing each between two stations' measure_km
+       yields TRUE per-edge alignment, replacing the straight-chord GeoJSON.
+
+wrote report.json, edge_runtime_join.csv

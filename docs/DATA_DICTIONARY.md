@@ -1,3 +1,9 @@
+> **SUPERSEDED for the shipped release (2026-10-15).** This file documents a pre-v1.4
+> schema and drifted from the data. The authoritative per-column reference is
+> `03_graph_construction/graph_v1_4/SCHEMA.md`, which is **generated** from the shipped
+> files by `make schema` and therefore cannot drift. This file is kept for the history of
+> the input dictionaries only.
+
 # Data Dictionary — Rail-Intell
 
 > ## ⚠ Describes the Phase 1 datasets and the superseded v1 graph files

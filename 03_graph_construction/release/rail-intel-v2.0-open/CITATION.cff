@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+title: >-
+  Rail-Intel: a station-level graph of the Indian railway network, built from open data (v2.0-open)
+message: >-
+  If you use this dataset, please cite it. It is a derived database of OpenStreetMap
+  and is licensed under the ODbL 1.0; DATASHEET.md states what it supports and what it does not.
+type: dataset
+version: "v2.0-open"
+date-released: "2026-10-21"
+license: ODbL-1.0
+abstract: >-
+  A graph of Indian Railways' running lines: 9,507 stations and 2,794 junctions
+  joined by 13,560 track sections, 70,304.6 route km. Section lengths are measured along
+  OpenStreetMap track, with gauge, electrification and state, and scheduled trains per section from
+  the 2017 timetable. Built only from open inputs (OpenStreetMap, Wikidata, datameet, data.gov.in),
+  with a places view for structural analysis, a record of every join and decision, and a manifest
+  that reproduces the files byte for byte.
+keywords:
+  - railway network
+  - Indian Railways
+  - spatial network
+  - network science
+  - OpenStreetMap
+  - graph dataset
+  - reproducibility
+authors:
+  - family-names: Vinjamuri
+    given-names: Bhuvanesh

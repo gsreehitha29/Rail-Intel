@@ -1,0 +1,1 @@
+Left: the ratio of true along-track distance to the straight chord the graph currently stores; 17.7% of station pairs are understated by more than 5%. Right: ranking 871 corridors by that ratio places all four of India's recognised mountain railways in the top six, using no terrain, elevation or heritage input of any kind (F-029).

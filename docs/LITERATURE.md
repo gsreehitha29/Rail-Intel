@@ -69,6 +69,75 @@ answer, and that difference is Module 3's contribution.
 
 ---
 
+### `[DAS20]` Complex Network Analysis of Indian Railway Zones (2020)
+arXiv:2004.04146
+
+**What it did.** Zone-level graph: **17 nodes** (the zones themselves), edges
+weighted by train count between zone pairs. In-degree/out-degree, "degree
+passenger correlation," betweenness, clustering, clique detection. The authors
+themselves note the limitation: this is "a network of complex networks" — each
+zone is a complex system in its own right, collapsed to a single node.
+
+**What we take.** Confirms the pattern across all Indian-railway network
+literature found so far: analysis has stayed at zone granularity (17 nodes)
+or timetable-station granularity (587–1,620 stations, `[SEN03], [BHA15]`
+and the SE-train study below). Nobody has reached infrastructure-level,
+station-population scale for India specifically — our 9,095 nodes is not
+just bigger than the two headline comparisons, it is a different *tier* of
+granularity than anything in the India-specific literature, zone studies
+included.
+
+---
+
+### `[REG24]` Connectivity evaluations of Indian Railways zones with superfast
+express (SE) trains (2024), ScienceDirect
+
+**What it did.** 1,620 stations across 17 zones, SE-train timetables joined to
+2011 census, employment and investment data. Degree centrality and
+accessibility as connectivity indicators, Theil's T to decompose between-zone
+vs. within-zone inequality, a spatial Durbin regression linking investment to
+employment. Finding: between-zone inequality in centrality/accessibility
+exceeds within-zone inequality, and daytime (7am–9pm) service correlates with
+job growth where night service does not.
+
+**What we take.** The first Indian-railway paper found that connects network
+position to a real socioeconomic outcome (employment), rather than stopping at
+a structural statistic — and the precedent that "friendly hours" (not just
+frequency) is a connectivity variable worth separating out.
+
+**How we differ — and this is a genuine opening.** Their accessibility measure
+is computed at **zone** granularity (17 units); ours would be computable at
+**station** granularity (9,095 nodes) if we can join population/employment
+data at that resolution. Nobody has done an equity/accessibility analysis
+below zone level for Indian Railways. This is `D17` below.
+
+---
+
+### `[RST25]` RSTGCN — Railway-centric Spatio-Temporal Graph Convolutional
+Network for Train Delay Prediction (2025), arXiv:2510.01262
+
+**What it did.** States explicitly it is "the first work to study delay
+prediction in the entire IRN." Builds a station graph from **3,892
+long-distance trains across 4,735 stations, 9,336 edges** (consecutive stops
+only — a space-of-stops graph in `[KUR06]`'s terms, not space-of-stations).
+Features: hourly average arrival/departure delay and a novel "hourly
+headway" metric. Architecture: three parallel spatio-temporal GCN branches
+(recent/daily/weekly), Chebyshev graph convolution, train-frequency-weighted
+spatial attention. Data: September 2024, one month of real observed delays.
+
+**What we take.** This is the most current Indian-railway-specific network
+paper found (2025) and it is decisive confirmation of the gap: even a
+state-of-the-art GNN built specifically for Indian Railways **this year**
+still derives its graph purely from timetables (no GIS, no infrastructure
+attributes, no true geometry), and at roughly half our node count because it
+only includes stations touched by long-distance trains. Our physical layer —
+real track count, gauge, sinuosity-validated geometry — is exactly the
+missing ingredient their spatial-attention mechanism would want but does not
+have. This is `D16` below: a concrete, direct extension of a paper published
+months before this one.
+
+---
+
 ### `[GHO]` Ghosh et al.
 *Statistical analysis of the Indian Railway Network: a complex network approach.*
 

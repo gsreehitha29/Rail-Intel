@@ -1,0 +1,44 @@
+==========================================================================
+E-102  per-zone broad-gauge route km vs the 2021 official figure
+==========================================================================
+
+per zone (BG route km):
+
+                      railway  total_bg_route_km  ours_km  delta_pct  delta_pct_excl
+zone_code                                                                           
+CR                    Central               3853   3267.1      -15.2           -36.0
+SECR       South East Central               2348   2172.0       -7.5           -35.5
+ER                    Eastern               2820   2739.5       -2.9           -24.4
+SCR             South Central               6206   6130.1       -1.2           -26.9
+NR                   Northern               7062   7176.5        1.6           -14.2
+NER             North Eastern               3102   3245.7        4.6            -2.7
+SR                   Southern               4914   5149.2        4.8           -14.9
+KR                     Konkan                740    782.7        5.8           -50.4
+ECR              East Central               4008   4316.1        7.7           -18.5
+SWR             South Western               3578   3885.3        8.6           -24.4
+NFR        Northeast Frontier               4152   4539.3        9.3           -30.7
+NWR             North Western               5248   5748.1        9.5           -18.3
+NCR             North Central               3222   3545.0       10.0           -14.6
+SER             South Eastern               2713   3083.5       13.7            -3.4
+WCR              West Central               3011   3515.1       16.7           -12.0
+ECoR               East Coast               2800   3318.8       18.5           -26.3
+WR                    Western               4885   5815.8       19.1           -11.5
+
+national BG total   reference 64,662 km   ours 68,430 km   delta +5.83%
+excluding suspect edges        ours 51,826 km   delta -19.85%
+
+per-zone deviation: median +7.7%  mean +6.1%  sd 9.1pp
+  range -15.2% (Central) to +19.1% (Western)
+  zones within +/-10%: 11 of 17
+  zones within +/-20%: 17 of 17
+
+correlation of per-zone totals: Pearson 0.9772  Spearman 0.9436
+
+INTERPRETATION
+  Deviation scatters widely (sd 9.1pp) -> the national agreement in
+  F-019 is NOT a uniform construction offset. Zone-level errors of opposite
+  sign are partially cancelling in the national total, which is exactly what a
+  single-number check cannot detect.
+  Excluding suspect edges does NOT improve the median absolute deviation (8.6% -> 18.5%).
+
+wrote zone_route_km.csv, report.json

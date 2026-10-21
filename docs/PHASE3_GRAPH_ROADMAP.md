@@ -269,7 +269,9 @@ Create:
 ADR format — keep it this tight:
 
 ```markdown
-## D-016 — Degree-2 operational junctions: dissolve or retain?
+> Note: an earlier draft pasted ADR `D-016` here mid-stage-plan. The decision
+> register is `docs/DECISIONS.md`; `D-016` is resolved there (parquet working
+> format, GraphML citable primary).
 Date: 2026-10-xx · Status: accepted · Owner: Sreehitha · Reversible: yes (one line)
 Question: ...
 Options: (a) retain all 115 (b) dissolve by path contraction (c) dissolve and keep a provenance column

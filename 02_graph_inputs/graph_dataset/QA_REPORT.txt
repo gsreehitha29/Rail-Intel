@@ -17,8 +17,10 @@ total nodes                        : 9,095
    operational_junction            : 474
    of which dissolvable (deg 2)    : 115
 nodes with coordinates             : 9,094
-   of which degree 1 (line ends)   : 313
-   of which degree >=3 (load-bearing): 46
+   degree 1 (line ends), all nodes        : 435
+      of which operational junctions      : 313
+   degree >=3 (branching), all nodes      : 1,128
+      of which operational junctions      : 46
 nodes with a zone                  : 8,997 (4,123 stated, 4,874 inferred from corridor)
 nodes with a state                 : 4,163
 
