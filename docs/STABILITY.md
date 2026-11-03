@@ -57,6 +57,11 @@ kilometres, capacity or congestion as a mechanism, freight, or exact centrality 
 `release_info()["caveats"]` returns the short form. Build on the first list; cite the
 second as a limitation.
 
+For v2.0-open, also do not rely on: terminal or stub-station degree and bridge status (V2-26,
+V2-27), `trains_2017` at renamed stations (V2-28), or the `joins` column as a filter (V2-30).
+`03_graph_construction/release/rail-intel-v2.0-open.ERRATA.md` lists them; v2.1 fixes the
+first three (D-071).
+
 ## How v1.4 changes
 
 It does not. Under D-055 an amendment is a **new release** — v1.5, its own directory, its

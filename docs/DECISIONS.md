@@ -1528,3 +1528,50 @@ deletion was limited to rebuildable intermediates.
 
 **Reversible:** archiving, yes — move the folders back. The deleted intermediates, only by
 re-running `make v13`.
+
+## D-071 — v2.1 scope frozen from the Phase 2 audit
+
+**Status:** accepted. **Adopted:** 2026-11-03 by the owner. **Binding:** yes.
+**Experiments:** E-721 (audit intake, `AUDIT_ERRATA.md`), E-722 (`E-722_v2_scope_scan`).
+
+**Decision.** v2.0-open stays frozen. A v2.1 release fixes exactly three issues, each of which
+passes the D-055 stop rule on a named reproducible case:
+
+1. **V2-26** — terminal buffer stops pruned by O4 (CSMT→MSD routed 14.21 km for 1.34 km;
+   JND→TORA 181 km for 13.4 km; MJ→MRWS unroutable; the four busiest bridges are artifacts).
+2. **V2-27** — 22 through stations left as degree-1 leaves on a stub (their stub edges are
+   counted as bridges; the stations can never be cut points).
+3. **V2-28** — 22 renamed station codes missing from the crosswalk (MMCT, DDU, PRYJ, RKMP show
+   0 scheduled 2017 trains).
+
+Everything else from the audit is a property (V2-29, V2-30, places adjacency, throat filtering,
+1,442 stations with no 2017 timetable stop), a hold (V2-31 Sealdah South), a confirmed no-go
+(Howrah Goods stub, Mumbai Central yard tracks), or goes to one time-boxed manual pass
+(short-versus-chord edges, ANVT throat, Thakurganj–Araria, TKMG–UDPR, KKD gap, INDR/MHBD),
+which adds to v2.1 only on a "fix" verdict. The throat tag (V2-30) is documented, not changed.
+
+**Termination.** v2.1 is finished when V2-26, V2-27 and V2-28 each pass their gate or are
+re-classed as properties. Defects found after this decision go to a v2.2 list, not into v2.1.
+The terminal fix gets one revision of its rule; a case that still fails becomes a property.
+
+**Why.** No v2.0 analysis has been published yet (E-718–E-720 are placeholders), so fixing
+before those runs costs less than qualifying their results afterwards. The scope is frozen so
+that the repair queue, which D-055 shows cannot be exhausted, does not reopen.
+
+**Reversibility:** v2.1 is a new version with its own gates, manifest and lock; no v2.0 file is
+edited.
+
+## D-072 — v2.1 adds 19 rename aliases to the station code crosswalk (V2-28)
+
+**Status:** accepted for the v2.1 build. **Adopted:** 2026-11-03. **Experiment:** E-723.
+
+**Decision.** `station_code_crosswalk.csv` in v2.1 is v2.0's 52 rows plus the 19 rows in
+`E-723_crosswalk_renames/aliases_v2_1.csv` (10 from the E-702 crosswalk, 2 manual renames,
+7 name matches). Three candidates are rejected (BRY, SLTP, 142). A name match is accepted only
+where the target has no 2017 code of its own or both codes share their timetable neighbours.
+
+**Effect (measured, release reproduced exactly as baseline).** Unroutable 2017 station pairs
+121 → 93; served stations 8,049 → 8,065; MMCT 0 → 45 trains, DDU 109 → 272, PRYJ 30 → 193.
+New pairs agree with the timetable within 2 km or 5% in 90.5% of cases.
+
+**Reversibility:** one CSV; removing a row restores v2.0 behaviour for that code.

@@ -1696,6 +1696,16 @@ move the distance-based ones: circuity median 1.258 → 1.300 (open, +3.4%; band
 overlap exactly 0.80 (minimum 0.80). Results that sit at the edge of their band should be reported
 with the band.
 
+## F-065 — v2.0-open's terminal and identity defects are wider than the audit found (E-722, E-723)
+
+The Phase 2 audit found five dead-end termini. A nationwide replay of the O4 prune finds 7
+station-to-station links lost within 100 m (14 within 200 m), including JND–TORA (routed 181 km
+for 13.4 km) and MJ–MRWS (unroutable), and a second class the audit did not see: 22 through
+stations left as degree-1 leaves on a stub. The four busiest bridges in v2.0 are artifacts of
+these. Separately, 19 renamed 2017 codes were missing from the crosswalk; adding them cuts
+unroutable station pairs from 121 to 93 and gives Mumbai Central its 2017 trains. No published
+v2.0 result is affected: the v2.0 criticality runs (E-718–E-720) have not been made.
+
 ## F-021 — 11.9% of sections have no alternative route, concentrated in 283 corridors
 
 From E-709 on graph v1.4. Two corridors sever more than 200 stations; the worst (SC0077,
