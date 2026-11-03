@@ -1575,3 +1575,46 @@ where the target has no 2017 code of its own or both codes share their timetable
 New pairs agree with the timetable within 2 km or 5% in 90.5% of cases.
 
 **Reversibility:** one CSV; removing a row restores v2.0 behaviour for that code.
+
+## D-073 — v2.1 station model: one station node binds every track within 100 m
+
+**Status:** accepted; to be tested in remediation Step 5. **Adopted:** 2026-11-03 by the owner.
+**Issues:** V2-26, V2-27 (V2-31 stays on hold). **Evidence:** E-722.
+
+**Problem.** `o3_snap` (osm_build.py:353) binds each station to the single nearest kept sample.
+At a station that touches several tracks, the others are left as anonymous vertices. O4 then
+prunes them where they dead-end (terminal platforms: CSMT, MAS, HWH) or contracts the station
+onto a stub (through stations: MDP snapped to the Giridih branch bay buffer stop; CRP and KGP sit
+on a platform loop that O4 trims).
+
+**Decision (rule O3m).** After O3 and the D-063 station merge, for each station node take the
+nearest kept sample on **every** chain with a sample within **100 m** of any of the node's OSM
+points, and bind those samples to the node. A sample within 100 m of two stations goes to the
+nearer. Bound vertices are stations for O4, so prune and splice cannot remove them. No track is
+added and no coordinate moves.
+
+**Why 100 m, uniformly.** It is D-062's snap distance and the 100 m already used by D-063's A2
+shared-station join, so the rule adds no new constant. It also keeps out two cases the audit
+ruled against: the Howrah Goods stub (131.6 m) and the Sealdah South lead (179 m, V2-31).
+
+**Semantics, stated.** A station node joins all tracks at the station. A path through a station
+node may therefore be a passenger transfer rather than a through train movement (the 43 m
+CSMT concourse in `AUDIT_ERRATA.md`). This is already true of D-063's same-code merge and A2
+joins; v2.1 extends it, and the datasheet will say so.
+
+**Predicted effect, checked in Step 5.**
+- **CSMT:** binds `n128794` (42.9 m), so CSMT–MSD becomes 1.42 km over chain 4365.
+- **MAS:** binds `n876` (56 m) and `n872` (73 m), the Moore Market approach.
+- **HWH:** binds the pieces at 73.8 m and 93.5 m. The SER lead at 174 m stays out, so HWH–TPKR is
+  unchanged and is recorded as a property.
+- **SDAH:** unchanged (hold).
+- **MDP, CRP, KGP and the other V2-27 stations:** bind a main-line sample and sit on the line
+  (degree ≥ 2).
+
+**Gates (plan Step 5).**
+- No new loops shorter than 0.5 km inside station yards beyond those listed and explained.
+- The places-graph distance error stays at 2.4% or below.
+- No v2.0 gate regresses.
+- One revision of the rule is allowed. A case that still fails becomes a property (D-071).
+
+**Reversibility:** a build flag; with O3m off, the build reproduces v2.0-open byte for byte.
