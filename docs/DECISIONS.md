@@ -1642,3 +1642,37 @@ The v2.0 defect was the route through that corridor, which is fixed.
 - the MAS Moore Market approach is bound but folded into the main-line route by O4 (MAS→BBQ 3.35 km
   against ~1.8);
 - the HWH SER lead stays outside 100 m.
+
+## D-074 — v2.1-open release candidate 1 (E-726)
+
+**Status:** proposed; the lock awaits the owner. **Date:** 2026-11-03.
+
+**What rc1 is.** The E-716 build with D-072 (19 rename aliases) and D-073 revision 1 (station
+multi-track snap). Edge ids carry `v2.1:`; node ids are unchanged.
+`release/rail-intel-v2.1-open-rc1.zip`, sha256
+`df623e869cc3f81430dce3c7b0005950f99d26260550ef6da045120e5f09ccd3`, byte-reproducible.
+v2.0-open is untouched, and its tests still pass.
+
+**Checks.**
+- C2 and C3 gates: all pass.
+- Against v2.0:
+  - official station-pair distances within tolerance 93.6% → 94.0%;
+  - 2024 route median error 0.38% → 0.31%;
+  - 2017 routes within 5% 81.4% → 88.2%;
+  - served cut-point agreement with v1.4.1 96.8% → 97.4%;
+  - unroutable 2017 pairs 121 → 85.
+- New tests `test_v2_1_release.py` and `test_v2_1_spotcheck.py` pin the figures and the named fixes
+  (CSMT→MSD ≤ 1.5 km, JND→TORA ≤ 20, MJ→MRWS ≤ 20, SPN→SZN ≤ 5, through stations on the line,
+  renamed stations with 2017 trains). 101 of 102 tests pass.
+
+**Open item: one spot-check fails.** Train 12123 (CSMT–Pune) measures 185.2 km against the
+timetable's 191 km, 3.04% against a 3% limit. v2.0 measured 185.7 km (2.77%). The 0.5 km change is
+the CSMT approach now measured along the track through Masjid; the shortfall itself predates v2.1
+(CSMT–Karjat 94.9 km in v2.0 against 99 in the timetable).
+
+**Options for the owner.**
+1. Lock as v2.1-open, keep the 3% limit, and record 12123 as a known property (a v2.2 item:
+   CSMT–Karjat length).
+2. Hold the lock and investigate CSMT–Karjat first; under D-071 that is new scope and goes to v2.2.
+
+The limit is not loosened to turn the test green (D-056).
