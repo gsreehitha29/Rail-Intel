@@ -1,0 +1,3 @@
+# builds are regenerated in about 3 minutes per flag (see README); only the scores are kept
+out/*/
+!out/eval_o3m.json

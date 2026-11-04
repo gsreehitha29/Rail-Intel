@@ -1578,7 +1578,7 @@ New pairs agree with the timetable within 2 km or 5% in 90.5% of cases.
 
 ## D-073 — v2.1 station model: one station node binds every track within 100 m
 
-**Status:** accepted; to be tested in remediation Step 5. **Adopted:** 2026-11-03 by the owner.
+**Status:** accepted, amended once (revision 1, below). **Adopted:** 2026-11-03 by the owner.
 **Issues:** V2-26, V2-27 (V2-31 stays on hold). **Evidence:** E-722.
 
 **Problem.** `o3_snap` (osm_build.py:353) binds each station to the single nearest kept sample.
@@ -1618,3 +1618,27 @@ joins; v2.1 extends it, and the datasheet will say so.
 - One revision of the rule is allowed. A case that still fails becomes a property (D-071).
 
 **Reversibility:** a build flag; with O3m off, the build reproduces v2.0-open byte for byte.
+
+**Revision 1 (2026-11-03, E-724; the one revision D-071 allows).** Measure the 100 m from the
+station's OSM point *or* from the track point it snapped to. As first written (OSM point only),
+MJ, HWH and RPM gained no binding, because their missed tracks lie 70–95 m from the track point but
+further from the OSM point.
+
+Result against v2.0 (E-724 `out/eval_o3m.json`):
+- **Routes:** CSMT→MSD 14.2 → 1.3 km; JND→TORA 181 → 15.8; MJ→MRWS 524 → 15.3; SPN→SZN 208 → 4.2.
+- **Through stations:** 18 of the 22 V2-27 stations are on the line.
+- **Graph-wide:** bridges 1,849 → 1,689; route km +1.25% → −0.34% of official, the loss being
+  duplicate parallel corridors; places-view error 2.39% → 1.52%; main-network station share unchanged.
+- **Short loops:** 36 new, totalling 10.1 km. 32 are junction-only, because fewer bypasses are
+  dropped; 4 touch a station. All are listed.
+- **Flag off:** reproduces v2.0-open value for value.
+
+**Prediction corrected.** Termini (CSMT, MAS, SDAH, CCG) stay degree 1, and correctly so. A
+station-level graph with parallel tracks collapsed draws a terminus's approach corridor as one edge.
+The v2.0 defect was the route through that corridor, which is fixed.
+
+**Not fixed, now properties (D-071):**
+- PRES, RPM, BNZ and GTNR stay leaves;
+- the MAS Moore Market approach is bound but folded into the main-line route by O4 (MAS→BBQ 3.35 km
+  against ~1.8);
+- the HWH SER lead stays outside 100 m.
