@@ -1,4 +1,4 @@
-# Attribution — Rail-Intel v2.1-open-rc1
+# Attribution — Rail-Intel v2.1-open
 
 Contains information from:
 

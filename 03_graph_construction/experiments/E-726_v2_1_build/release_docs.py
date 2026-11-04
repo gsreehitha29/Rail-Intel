@@ -94,6 +94,9 @@ Written down rather than hidden; see the issue register for the full list.
   timetable stops have no station in OSM (Moore Market, Vashi, Ravli Jn) and are skipped.
 - A station merged from several OSM points reports one point's coordinate, so `length_chord_km`
   can exceed `length_km` where the track meets the station at another point.
+- Mumbai CSMT to Karjat measures 94.5 km against the 2017 timetable's 99 km. So train 12123 (CSMT to
+  Pune) is 3.0% short of its timetable distance, the one spot-checked train outside 3%. The
+  shortfall was present in v2.0 (2.8%).
 - Parallel tracks are collapsed to one section; the physical graph keeps junction areas as they are,
   so it has more cycles than a station-level view. Use `places/` for structure.
 - Track tagged as running but with no 2017 train stays in: {km_no_2017}% of km has no 2017 service.

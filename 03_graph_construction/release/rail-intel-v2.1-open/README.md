@@ -1,4 +1,4 @@
-# Rail-Intel v2.1-open-rc1
+# Rail-Intel v2.1-open
 
 A station-level graph of the Indian railway network, built from open data only.
 
@@ -17,6 +17,6 @@ A station-level graph of the Indian railway network, built from open data only.
 | `DATASHEET.md` | what the data is, how it was made, what it can and cannot do |
 | `manifest.json`, `SHA256SUMS` | every file, row count and hash, and the inputs it was built from |
 
-Version: v2.1-open-rc1. A release candidate: figures may change before the final lock.
+Version: v2.1-open. Final release: the files and their hashes are fixed (see manifest.json and SHA256SUMS).
 
 How to cite: see `CITATION.cff`.

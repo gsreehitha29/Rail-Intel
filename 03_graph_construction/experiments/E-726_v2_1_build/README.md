@@ -11,10 +11,10 @@ python run_c2.py --stage=joins     # ~45 s
 python run_c2.py --stage=graph     # ~30 s
 python run_c2.py --stage=service   # ~50 s: 2024 + 2017 service layers, attributes, C2 gates
 python validate_c3.py              # ~40 s: C3 gates
-python release.py                  # ~8 s: release/rail-intel-v2.1-open-rc1/ and its zip
+python release.py --version=v2.1-open   # ~8 s: release/rail-intel-v2.1-open/ and its zip (locked, D-074)
 ```
 
-## Results (rc1)
+## Results (locked v2.1-open; data identical to rc1)
 
 | | v2.0-open | v2.1-open-rc1 |
 |---|---|---|
@@ -27,7 +27,7 @@ python release.py                  # ~8 s: release/rail-intel-v2.1-open-rc1/ and
 | 2017 train routes within 5% | 81.4% | 88.2% |
 | Served cut points agreeing with v1.4.1 | 96.8% | 97.4% |
 | 2017 station pairs unroutable | 121 of 27,952 | 85 of 27,997 |
-| Zip sha256 (byte-reproducible: two runs, one hash) | b1e39081…eeda | df623e86…ccd3 |
+| Zip sha256 (byte-reproducible: two runs, one hash) | b1e39081…eeda | adcbcd1f…f8b4 (locked; rc1 df623e86…ccd3) |
 
 ## Tests
 
@@ -38,4 +38,4 @@ python release.py                  # ~8 s: release/rail-intel-v2.1-open-rc1/ and
 - **Where the 0.5 km goes:** all of it is the CSMT approach, now measured along the track through Masjid.
 - **The older shortfall:** CSMT–Karjat is 94.9 km in v2.0 and 94.5 km in v2.1, against the timetable's 99 km.
 
-This is recorded in D-074 for the owner to decide; the test is not loosened.
+At the lock the owner recorded it as V2-34 (D-074). The spot-check gives 12123 its own 3.5% bound; the 3% limit stands for every other train.

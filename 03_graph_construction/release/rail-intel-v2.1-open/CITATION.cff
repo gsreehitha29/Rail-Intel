@@ -1,11 +1,11 @@
 cff-version: 1.2.0
 title: >-
-  Rail-Intel: a station-level graph of the Indian railway network, built from open data (v2.1-open-rc1)
+  Rail-Intel: a station-level graph of the Indian railway network, built from open data (v2.1-open)
 message: >-
   If you use this dataset, please cite it. It is a derived database of OpenStreetMap
   and is licensed under the ODbL 1.0; DATASHEET.md states what it supports and what it does not.
 type: dataset
-version: "v2.1-open-rc1"
+version: "v2.1-open"
 date-released: "2026-11-03"
 license: ODbL-1.0
 abstract: >-

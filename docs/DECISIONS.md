@@ -1643,9 +1643,11 @@ The v2.0 defect was the route through that corridor, which is fixed.
   against ~1.8);
 - the HWH SER lead stays outside 100 m.
 
-## D-074 — v2.1-open release candidate 1 (E-726)
+## D-074 — v2.1-open: release candidate 1 and the lock (E-726)
 
-**Status:** proposed; the lock awaits the owner. **Date:** 2026-11-03.
+**Status:** accepted; **locked 2026-11-03** by the owner (option 1 below). Final package
+`release/rail-intel-v2.1-open.zip`; see `rail-intel-v2.1-open.LOCK.md`. Train 12123 is recorded as
+V2-34, and the spot-check gives it its own 3.5% bound so further drift still fails.
 
 **What rc1 is.** The E-716 build with D-072 (19 rename aliases) and D-073 revision 1 (station
 multi-track snap). Edge ids carry `v2.1:`; node ids are unchanged.

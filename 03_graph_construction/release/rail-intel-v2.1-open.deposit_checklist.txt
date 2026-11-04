@@ -1,0 +1,13 @@
+DEPOSIT CHECKLIST - Rail-Intel v2.1-open  (FOR LATER: publication is deferred; nothing is deposited)
+
+Upload:   rail-intel-v2.1-open.zip
+          sha256 adcbcd1f64cb73106cd8d5ff5b090e9217ca3c3af2850f49d8736da844e9f8b4
+Metadata: rail-intel-v2.1-open.zenodo.json  (Zenodo form: type Dataset, licence ODC-ODbL, creator Vinjamuri, Bhuvanesh)
+Add yourself on the form (not invented here): affiliation, ORCID (optional).
+
+1. Read rail-intel-v2.1-open/DATASHEET.md once more. Claims and limits must be ones you stand behind.
+2. Create the deposit as a DRAFT first. Check the preview: title, licence shows ODbL, files list shows one zip.
+3. After upload, compare the file checksum Zenodo shows with the sha256 above. They must match.
+4. Publish. Copy the DOI.
+5. Tell me the DOI. I will add it to CITATION.cff (repo and package notes), the README and the docs, as v2.1-open.1 docs only
+   (the data package is not rebuilt, so its hash stays).
