@@ -1696,6 +1696,24 @@ move the distance-based ones: circuity median 1.258 → 1.300 (open, +3.4%; band
 overlap exactly 0.80 (minimum 0.80). Results that sit at the edge of their band should be reported
 with the band.
 
+## F-066 — On v2.1-open the worst single point of failure is the Lumding–Badarpur line, not Siliguri (E-718, E-719, E-720)
+
+The v1.4 headline (F-021): a 10-section corridor at Barsoi–Makuria–Radhikapur isolated the whole
+Northeast. That is no longer true of the network. The Araria–Galgalia line, commissioned 2024–25,
+gives a second route; removing it from v2.1 recreates 18 bridges there that each sever more than 500
+stations.
+
+On v2.1 the worst corridor is the Lumding–Badarpur hill line towards Silchar, Manipur and Mizoram,
+severing 109 stations. It is robust in all 12 cells of the release × view × threshold sweep. Other results:
+- **Exposure:** 7.0% of daily train movements cross a section with no alternative route (v1.4 5.6%,
+  v2.0 9.2%, the difference being v2.0's terminal artifacts).
+- **Busiest 100 sections:** 86 force a detour over 3× (median extra 202 km).
+- **Sections with no alternative route:** the share depends on the view (12.7% physical, 15.9% places)
+  and must be quoted with it.
+- **Degree:** the junction-tail exponential fit (Kurant & Thiran) holds on the places view (chi-square
+  p = 0.14). It had failed on v2.0. The likelihood-ratio test no longer separates it from a power law
+  (p = 0.38).
+
 ## F-065 — v2.0-open's terminal and identity defects are wider than the audit found (E-722, E-723)
 
 The Phase 2 audit found five dead-end termini. A nationwide replay of the O4 prune finds 7
