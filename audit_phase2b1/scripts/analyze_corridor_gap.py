@@ -86,7 +86,7 @@ def main():
         }
     }
     with open('audit_phase2b1/results/corridor_gap_analysis.json', 'w') as f:
-        json.dump(out, f, indent=2)
+        json.dump(out, f, indent=2, default=lambda o: o.item() if hasattr(o, "item") else str(o))
 
 if __name__ == "__main__":
     main()

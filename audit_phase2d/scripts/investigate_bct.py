@@ -1,7 +1,8 @@
 import pandas as pd
 import json
 
-root = "c:/Users/Sreehitha/OneDrive/Desktop/Major Project/Rail-Intel"
+import pathlib
+root = str(pathlib.Path(__file__).resolve().parents[2])
 
 # 1. Check wikidata_stations.csv for BCT and MMCT
 wd = pd.read_csv(f"{root}/external_data/wikidata_stations.csv")
@@ -21,7 +22,7 @@ print(f"\n=== 2017 Timetable pairs mentioning BCT or MMCT ({len(bct_pairs)}) ===
 print(bct_pairs.to_string())
 
 # 3. Check 2017 raw timetable (Train_details_22122017.csv) if present
-tt_path = f"{root}/external_data/Train_details_22122017.csv"
+tt_path = f"{root}/external_data/timetable_2017_datagovin/Train_details_22122017.csv"
 try:
     tt = pd.read_csv(tt_path, low_memory=False)
     bct_trains = tt[tt["Station Code"].isin(["BCT", "MMCT"])]

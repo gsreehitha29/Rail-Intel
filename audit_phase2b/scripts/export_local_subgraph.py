@@ -4,7 +4,7 @@ import pathlib
 import networkx as nx
 
 def main():
-    root = pathlib.Path("c:/Users/Sreehitha/OneDrive/Desktop/Major Project\Rail-Intel")
+    root = pathlib.Path(__file__).resolve().parents[2]
     release_dir = root / "03_graph_construction" / "release" / "rail-intel-v2.0-open"
     results_dir = root / "audit_phase2b" / "results"
     

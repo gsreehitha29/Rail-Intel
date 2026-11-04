@@ -5,7 +5,7 @@ import networkx as nx
 import pyarrow.parquet as pq
 
 def main():
-    root = pathlib.Path("c:/Users/Sreehitha/OneDrive/Desktop/Major Project/Rail-Intel")
+    root = pathlib.Path(__file__).resolve().parents[2]
     work_dir = root / "03_graph_construction" / "graph_v2_0_open" / "work"
 
     E = pq.read_table(work_dir / "network_edges.parquet").to_pandas()

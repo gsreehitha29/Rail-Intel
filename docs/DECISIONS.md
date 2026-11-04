@@ -1528,3 +1528,153 @@ deletion was limited to rebuildable intermediates.
 
 **Reversible:** archiving, yes — move the folders back. The deleted intermediates, only by
 re-running `make v13`.
+
+## D-071 — v2.1 scope frozen from the Phase 2 audit
+
+**Status:** accepted. **Adopted:** 2026-11-03 by the owner. **Binding:** yes.
+**Experiments:** E-721 (audit intake, `AUDIT_ERRATA.md`), E-722 (`E-722_v2_scope_scan`).
+
+**Decision.** v2.0-open stays frozen. A v2.1 release fixes exactly three issues, each of which
+passes the D-055 stop rule on a named reproducible case:
+
+1. **V2-26** — terminal buffer stops pruned by O4 (CSMT→MSD routed 14.21 km for 1.34 km;
+   JND→TORA 181 km for 13.4 km; MJ→MRWS unroutable; the four busiest bridges are artifacts).
+2. **V2-27** — 22 through stations left as degree-1 leaves on a stub (their stub edges are
+   counted as bridges; the stations can never be cut points).
+3. **V2-28** — 22 renamed station codes missing from the crosswalk (MMCT, DDU, PRYJ, RKMP show
+   0 scheduled 2017 trains).
+
+Everything else from the audit is a property (V2-29, V2-30, places adjacency, throat filtering,
+1,442 stations with no 2017 timetable stop), a hold (V2-31 Sealdah South), a confirmed no-go
+(Howrah Goods stub, Mumbai Central yard tracks), or goes to one time-boxed manual pass
+(short-versus-chord edges, ANVT throat, Thakurganj–Araria, TKMG–UDPR, KKD gap, INDR/MHBD),
+which adds to v2.1 only on a "fix" verdict. The throat tag (V2-30) is documented, not changed.
+
+**Termination.** v2.1 is finished when V2-26, V2-27 and V2-28 each pass their gate or are
+re-classed as properties. Defects found after this decision go to a v2.2 list, not into v2.1.
+The terminal fix gets one revision of its rule; a case that still fails becomes a property.
+
+**Why.** No v2.0 analysis has been published yet (E-718–E-720 are placeholders), so fixing
+before those runs costs less than qualifying their results afterwards. The scope is frozen so
+that the repair queue, which D-055 shows cannot be exhausted, does not reopen.
+
+**Reversibility:** v2.1 is a new version with its own gates, manifest and lock; no v2.0 file is
+edited.
+
+## D-072 — v2.1 adds 19 rename aliases to the station code crosswalk (V2-28)
+
+**Status:** accepted for the v2.1 build. **Adopted:** 2026-11-03. **Experiment:** E-723.
+
+**Decision.** `station_code_crosswalk.csv` in v2.1 is v2.0's 52 rows plus the 19 rows in
+`E-723_crosswalk_renames/aliases_v2_1.csv` (10 from the E-702 crosswalk, 2 manual renames,
+7 name matches). Three candidates are rejected (BRY, SLTP, 142). A name match is accepted only
+where the target has no 2017 code of its own or both codes share their timetable neighbours.
+
+**Effect (measured, release reproduced exactly as baseline).** Unroutable 2017 station pairs
+121 → 93; served stations 8,049 → 8,065; MMCT 0 → 45 trains, DDU 109 → 272, PRYJ 30 → 193.
+New pairs agree with the timetable within 2 km or 5% in 90.5% of cases.
+
+**Reversibility:** one CSV; removing a row restores v2.0 behaviour for that code.
+
+## D-073 — v2.1 station model: one station node binds every track within 100 m
+
+**Status:** accepted, amended once (revision 1, below). **Adopted:** 2026-11-03 by the owner.
+**Issues:** V2-26, V2-27 (V2-31 stays on hold). **Evidence:** E-722.
+
+**Problem.** `o3_snap` (osm_build.py:353) binds each station to the single nearest kept sample.
+At a station that touches several tracks, the others are left as anonymous vertices. O4 then
+prunes them where they dead-end (terminal platforms: CSMT, MAS, HWH) or contracts the station
+onto a stub (through stations: MDP snapped to the Giridih branch bay buffer stop; CRP and KGP sit
+on a platform loop that O4 trims).
+
+**Decision (rule O3m).** After O3 and the D-063 station merge, for each station node take the
+nearest kept sample on **every** chain with a sample within **100 m** of any of the node's OSM
+points, and bind those samples to the node. A sample within 100 m of two stations goes to the
+nearer. Bound vertices are stations for O4, so prune and splice cannot remove them. No track is
+added and no coordinate moves.
+
+**Why 100 m, uniformly.** It is D-062's snap distance and the 100 m already used by D-063's A2
+shared-station join, so the rule adds no new constant. It also keeps out two cases the audit
+ruled against: the Howrah Goods stub (131.6 m) and the Sealdah South lead (179 m, V2-31).
+
+**Semantics, stated.** A station node joins all tracks at the station. A path through a station
+node may therefore be a passenger transfer rather than a through train movement (the 43 m
+CSMT concourse in `AUDIT_ERRATA.md`). This is already true of D-063's same-code merge and A2
+joins; v2.1 extends it, and the datasheet will say so.
+
+**Predicted effect, checked in Step 5.**
+- **CSMT:** binds `n128794` (42.9 m), so CSMT–MSD becomes 1.42 km over chain 4365.
+- **MAS:** binds `n876` (56 m) and `n872` (73 m), the Moore Market approach.
+- **HWH:** binds the pieces at 73.8 m and 93.5 m. The SER lead at 174 m stays out, so HWH–TPKR is
+  unchanged and is recorded as a property.
+- **SDAH:** unchanged (hold).
+- **MDP, CRP, KGP and the other V2-27 stations:** bind a main-line sample and sit on the line
+  (degree ≥ 2).
+
+**Gates (plan Step 5).**
+- No new loops shorter than 0.5 km inside station yards beyond those listed and explained.
+- The places-graph distance error stays at 2.4% or below.
+- No v2.0 gate regresses.
+- One revision of the rule is allowed. A case that still fails becomes a property (D-071).
+
+**Reversibility:** a build flag; with O3m off, the build reproduces v2.0-open byte for byte.
+
+**Revision 1 (2026-11-03, E-724; the one revision D-071 allows).** Measure the 100 m from the
+station's OSM point *or* from the track point it snapped to. As first written (OSM point only),
+MJ, HWH and RPM gained no binding, because their missed tracks lie 70–95 m from the track point but
+further from the OSM point.
+
+Result against v2.0 (E-724 `out/eval_o3m.json`):
+- **Routes:** CSMT→MSD 14.2 → 1.3 km; JND→TORA 181 → 15.8; MJ→MRWS 524 → 15.3; SPN→SZN 208 → 4.2.
+- **Through stations:** 18 of the 22 V2-27 stations are on the line.
+- **Graph-wide:** bridges 1,849 → 1,689; route km +1.25% → −0.34% of official, the loss being
+  duplicate parallel corridors; places-view error 2.39% → 1.52%; main-network station share unchanged.
+- **Short loops:** 36 new, totalling 10.1 km. 32 are junction-only, because fewer bypasses are
+  dropped; 4 touch a station. All are listed.
+- **Flag off:** reproduces v2.0-open value for value.
+
+**Prediction corrected.** Termini (CSMT, MAS, SDAH, CCG) stay degree 1, and correctly so. A
+station-level graph with parallel tracks collapsed draws a terminus's approach corridor as one edge.
+The v2.0 defect was the route through that corridor, which is fixed.
+
+**Not fixed, now properties (D-071):**
+- PRES, RPM, BNZ and GTNR stay leaves;
+- the MAS Moore Market approach is bound but folded into the main-line route by O4 (MAS→BBQ 3.35 km
+  against ~1.8);
+- the HWH SER lead stays outside 100 m.
+
+## D-074 — v2.1-open: release candidate 1 and the lock (E-726)
+
+**Status:** accepted; **locked 2026-11-03** by the owner (option 1 below). Final package
+`release/rail-intel-v2.1-open.zip`; see `rail-intel-v2.1-open.LOCK.md`. Train 12123 is recorded as
+V2-34, and the spot-check gives it its own 3.5% bound so further drift still fails.
+
+**What rc1 is.** The E-716 build with D-072 (19 rename aliases) and D-073 revision 1 (station
+multi-track snap). Edge ids carry `v2.1:`; node ids are unchanged.
+`release/rail-intel-v2.1-open-rc1.zip`, sha256
+`df623e869cc3f81430dce3c7b0005950f99d26260550ef6da045120e5f09ccd3`, byte-reproducible.
+v2.0-open is untouched, and its tests still pass.
+
+**Checks.**
+- C2 and C3 gates: all pass.
+- Against v2.0:
+  - official station-pair distances within tolerance 93.6% → 94.0%;
+  - 2024 route median error 0.38% → 0.31%;
+  - 2017 routes within 5% 81.4% → 88.2%;
+  - served cut-point agreement with v1.4.1 96.8% → 97.4%;
+  - unroutable 2017 pairs 121 → 85.
+- New tests `test_v2_1_release.py` and `test_v2_1_spotcheck.py` pin the figures and the named fixes
+  (CSMT→MSD ≤ 1.5 km, JND→TORA ≤ 20, MJ→MRWS ≤ 20, SPN→SZN ≤ 5, through stations on the line,
+  renamed stations with 2017 trains). 101 of 102 tests pass.
+
+**Open item: one spot-check fails.** Train 12123 (CSMT–Pune) measures 185.2 km against the
+timetable's 191 km, 3.04% against a 3% limit. v2.0 measured 185.7 km (2.77%). The 0.5 km change is
+the CSMT approach now measured along the track through Masjid; the shortfall itself predates v2.1
+(CSMT–Karjat 94.9 km in v2.0 against 99 in the timetable).
+
+**Options for the owner.**
+1. Lock as v2.1-open, keep the 3% limit, and record 12123 as a known property (a v2.2 item:
+   CSMT–Karjat length).
+2. Hold the lock and investigate CSMT–Karjat first; under D-071 that is new scope and goes to v2.2.
+
+The limit is not loosened to turn the test green (D-056).

@@ -13,7 +13,7 @@ def haversine_km(lon1, lat1, lon2, lat2):
     return 2.0 * 6371.0088 * math.asin(math.sqrt(min(1.0, max(0.0, a))))
 
 def main():
-    root = pathlib.Path("c:/Users/Sreehitha/OneDrive/Desktop/Major Project/Rail-Intel")
+    root = pathlib.Path(__file__).resolve().parents[2]
     release_dir = root / "03_graph_construction" / "release" / "rail-intel-v2.0-open"
     work_dir = root / "03_graph_construction" / "graph_v2_0_open" / "work"
     results_dir = root / "audit_phase2b1" / "results"
